@@ -46,8 +46,6 @@ public class AuthenticationController {
         return ResponseEntity.status(400).build();
     }
 
-
-
     @GetMapping("/test")
     public UserDetails test() {
         return databaseUserDetailsService.loadUserByUsername("podgorski.p");

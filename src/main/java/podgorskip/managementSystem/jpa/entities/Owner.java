@@ -1,7 +1,9 @@
 package podgorskip.managementSystem.jpa.entities;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Setter;
 
 import java.util.Date;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.List;
 @Table(name = "owners", schema = "real_estate")
 @Data
 public class Owner {
+    @Setter(AccessLevel.NONE)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -27,7 +30,9 @@ public class Owner {
     @OneToMany(mappedBy = "owner")
     private List<Estate> ownedEstates;
 
+    @Setter(AccessLevel.NONE)
     private Role role = Role.OWNER;
 
+    @Setter(AccessLevel.NONE)
     private Date created;
 }

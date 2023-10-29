@@ -4,8 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerator;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Date;
 
@@ -17,6 +19,7 @@ import java.util.Date;
         property = "id"
 )
 public class Estate {
+    @Setter(AccessLevel.NONE)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -36,7 +39,10 @@ public class Estate {
     private String localization;
     private boolean garage;
     private int storeys;
+
+    @Setter(AccessLevel.NONE)
     private Date published;
+
     private String description;
 
     @Column(name = "expiration_date")
