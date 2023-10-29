@@ -2,15 +2,11 @@ package podgorskip.managementSystem.jpa.entities;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.springframework.stereotype.Component;
-
-import java.util.Date;
 
 @Entity
-@Table(name = "users", schema = "real_estate")
+@Table(name = "brokers", schema = "real_estate")
 @Data
-@Component
-public class User {
+public class Broker {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -24,8 +20,4 @@ public class User {
     private String lastName;
 
     private String password;
-
-    private Date created;
-
-    private Role role = Role.USER;
 }

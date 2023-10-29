@@ -31,9 +31,11 @@ public class Agent {
     private String lastName;
 
     private String password;
-    private String position;
+
     private Date created;
 
     @OneToMany(mappedBy = "agent")
     private List<Estate> managedEstates;
+
+    private Role role = Role.AGENT;
 }

@@ -3,6 +3,7 @@ package podgorskip.managementSystem.jpa.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -25,4 +26,8 @@ public class Owner {
 
     @OneToMany(mappedBy = "owner")
     private List<Estate> ownedEstates;
+
+    private Role role = Role.OWNER;
+
+    private Date created;
 }
