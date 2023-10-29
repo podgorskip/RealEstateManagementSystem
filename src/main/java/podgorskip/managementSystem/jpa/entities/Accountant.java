@@ -20,4 +20,6 @@ public class Accountant {
     private String lastName;
 
     private String password;
+
+    private Role role = Role.ACCOUNTANT;
 }

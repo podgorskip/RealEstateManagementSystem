@@ -20,4 +20,6 @@ public class Broker {
     private String lastName;
 
     private String password;
+
+    private Role role = Role.BROKER;
 }
