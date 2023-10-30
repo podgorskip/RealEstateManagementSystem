@@ -9,7 +9,5 @@ import org.springframework.stereotype.Component;
 @Component
 @JsonTypeName("client")
 public class Client extends User {
-    public Client() {
-        setRole(Role.CLIENT);
-    }
+
 }

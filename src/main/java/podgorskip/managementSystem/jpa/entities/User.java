@@ -1,14 +1,16 @@
 package podgorskip.managementSystem.jpa.entities;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
 
 import java.util.Date;
+import java.util.List;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "role")
 @JsonSubTypes({
@@ -38,14 +40,9 @@ public abstract class User {
 
     private String password;
 
-    @Setter(AccessLevel.NONE)
     private Date created;
 
-    @Transient
-    @Setter(AccessLevel.NONE)
+    @OneToOne
+    @JoinColumn(name = "role_id")
     private Role role;
-
-    protected void setRole(Role role) {
-        this.role = role;
-    }
 }

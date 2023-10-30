@@ -19,7 +19,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import podgorskip.managementSystem.dto.UserDTO;
 import podgorskip.managementSystem.jpa.entities.User;
 import podgorskip.managementSystem.security.JwtFilter;
 import podgorskip.managementSystem.security.DatabaseUserDetailsService;
@@ -65,13 +64,4 @@ public class WebConfiguration {
         return configuration.getAuthenticationManager();
     }
 
-    @Bean
-    public ModelMapper modelMapper() {
-        ModelMapper modelMapper = new ModelMapper();
-        modelMapper.createTypeMap(UserDTO.class, User.class)
-                .addMapping(UserDTO::getUsername, User::setUsername)
-                .addMapping(UserDTO::getPassword, User::setPassword);
-
-        return modelMapper;
-    }
 }

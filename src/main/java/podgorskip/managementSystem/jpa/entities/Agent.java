@@ -14,9 +14,6 @@ import java.util.List;
 )
 @JsonTypeName("agent")
 public class Agent extends User {
-    private Agent() {
-        setRole(Role.AGENT);
-    }
 
     @OneToMany(mappedBy = "agent")
     private List<Estate> managedEstates;

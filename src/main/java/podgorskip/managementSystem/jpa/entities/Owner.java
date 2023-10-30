@@ -9,10 +9,6 @@ import java.util.List;
 @JsonTypeName("owner")
 public class Owner extends User {
 
-    public Owner() {
-        setRole(Role.OWNER);
-    }
-
     @OneToMany(mappedBy = "owner")
     private List<Estate> ownedEstates;
 }
