@@ -31,16 +31,11 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class AuthenticationController {
     private final PasswordEncoder passwordEncoder;
-
     private final AuthenticationManager authenticationManager;
-
     private final DatabaseUserDetailsService databaseUserDetailsService;
     private final JwtUtils jwtUtils;
-
     private final ClientsRepository clientsRepository;
-
     private final OwnersRepository ownersRepository;
-
     private final RolesRepository rolesRepository;
 
     @PostMapping("/register")
@@ -76,7 +71,6 @@ public class AuthenticationController {
             }
         }
 
-
        return ResponseEntity.status(204).build();
     }
 
@@ -92,9 +86,9 @@ public class AuthenticationController {
             }
 
         } catch (UsernameNotFoundException e) {
+
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found", e);
         }
-
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }

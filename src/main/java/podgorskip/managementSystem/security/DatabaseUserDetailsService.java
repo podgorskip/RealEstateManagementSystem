@@ -25,6 +25,8 @@ public class DatabaseUserDetailsService implements UserDetailsService {
     private OwnersRepository ownersRepository;
     @Autowired
     private ClientsRepository clientsRepository;
+    @Autowired
+    private AdministratorsRepository administratorsRepository;
 
     @Override
     public CustomUserDetails loadUserByUsername(String username) {
@@ -34,6 +36,7 @@ public class DatabaseUserDetailsService implements UserDetailsService {
         users.addAll(agentsRepository.findAll());
         users.addAll(ownersRepository.findAll());
         users.addAll(clientsRepository.findAll());
+        users.addAll(administratorsRepository.findAll());
 
         User user = users.stream().filter(u -> u.getUsername().equals(username)).findFirst().orElseThrow();
 
