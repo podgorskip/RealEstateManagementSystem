@@ -22,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import podgorskip.managementSystem.jpa.entities.User;
 import podgorskip.managementSystem.security.JwtFilter;
 import podgorskip.managementSystem.security.DatabaseUserDetailsService;
+import podgorskip.managementSystem.utils.ValidationUtils;
 
 @Configuration
 @EnableWebSecurity
@@ -63,5 +64,4 @@ public class WebConfiguration {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
-
 }
