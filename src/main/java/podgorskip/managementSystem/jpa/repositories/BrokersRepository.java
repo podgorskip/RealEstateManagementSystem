@@ -6,4 +6,5 @@ import podgorskip.managementSystem.jpa.entities.Broker;
 
 @Repository
 public interface BrokersRepository extends JpaRepository<Broker, Integer> {
+    Broker findByUsername(String username);
 }

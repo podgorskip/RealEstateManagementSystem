@@ -20,18 +20,5 @@ public class ApplicationController {
     @Autowired
     private AgentsRepository agentsRepository;
 
-    @GetMapping("/agents")
-    public ResponseEntity<Agent> showAgentDetails(@RequestBody String username) {
-        Optional<Agent> agent = agentsRepository.findByUsername(username);
 
-        try {
-
-            if (agent.isEmpty()) throw new UsernameNotFoundException("User not found.");
-
-        } catch (UsernameNotFoundException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found", e);
-        }
-
-        return ResponseEntity.ok(agent.get());
-    }
 }

@@ -6,5 +6,5 @@ import podgorskip.managementSystem.jpa.entities.Accountant;
 
 @Repository
 public interface AccountantsRepository extends JpaRepository<Accountant, Integer> {
-
+    Accountant findByUsername(String username);
 }

@@ -6,10 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import podgorskip.managementSystem.dto.RequestUserDTO;
 import podgorskip.managementSystem.jpa.entities.Accountant;
 import podgorskip.managementSystem.jpa.entities.Agent;
@@ -19,6 +16,7 @@ import podgorskip.managementSystem.jpa.repositories.*;
 import podgorskip.managementSystem.security.CustomUserDetails;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/real-estate-agency/admin")
@@ -35,7 +33,7 @@ public class AdminController {
         ResponseEntity<String> response = validateCredentials(userDetails, user, "ADD_AGENT", "AGENT");
 
         if (Objects.isNull(response)) {
-            agentsRepository.save((Agent) createUser(user, "AGENT"));
+            agentsRepository.save((Agent) createUser(user, "agent"));
             return ResponseEntity.ok("Correctly created a new agent account");
         }
 
@@ -47,7 +45,7 @@ public class AdminController {
         ResponseEntity<String> response = validateCredentials(userDetails, user, "ADD_BROKER", "BROKER");
 
         if (Objects.isNull(response)) {
-            brokersRepository.save((Broker) createUser(user, "BROKER"));
+            brokersRepository.save((Broker) createUser(user, "broker"));
             return ResponseEntity.ok("Correctly created a new broker account");
         }
 
@@ -59,15 +57,30 @@ public class AdminController {
         ResponseEntity<String> response = validateCredentials(userDetails, user, "ADD_ACCOUNTANT", "ACCOUNTANT");
 
         if (Objects.isNull(response)) {
-            accountantsRepository.save((Accountant) createUser(user, "ACCOUNTANT"));
+            accountantsRepository.save((Accountant) createUser(user, "accountant"));
             return ResponseEntity.ok("Correctly created a new accountant account");
         }
 
         return response;
     }
 
-    private User createUser(RequestUserDTO requestUser, String roleName) {
+    @DeleteMapping("/remove-agent")
+    public ResponseEntity<String> removeAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody String username) {
+        System.out.println(username);
+        return removeUser(userDetails, username, "REMOVE_AGENT", "agent");
+    }
 
+    @DeleteMapping("/remove-broker")
+    public ResponseEntity<String> removeBroker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody String username) {
+        return removeUser(userDetails, username, "REMOVE_BROKER", "broker");
+    }
+
+    @DeleteMapping("/remove-accountant")
+    public ResponseEntity<String> removeAccountant(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody String username) {
+        return removeUser(userDetails, username, "REMOVE_ACCOUNTANT", "accountant");
+    }
+
+    private User createUser(RequestUserDTO requestUser, String roleName) {
         User user;
 
         if ("AGENT".equals(roleName)) user = new Agent();
@@ -86,6 +99,11 @@ public class AdminController {
     }
 
     private ResponseEntity<String> validateCredentials(CustomUserDetails userDetails, RequestUserDTO requestUser, String requiredAuthority, String roleName) {
+
+        if (Objects.isNull(userDetails) || userDetails.getAuthorities().stream().noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(requiredAuthority))) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to create a new " + roleName + " account.");
+        }
+
         if (Objects.isNull(requestUser)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("No user details are provided.");
         }
@@ -94,10 +112,33 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("Not all the requirements are met.");
         }
 
-        if (userDetails.getAuthorities().stream().noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(requiredAuthority))) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to create a new " + roleName.toLowerCase() + " account.");
+        return null;
+    }
+
+    private ResponseEntity<String> removeUser(CustomUserDetails userDetails, String username, String requiredAuthority, String roleName) {
+
+        if (Objects.isNull(userDetails) || userDetails.getAuthorities().stream().noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(requiredAuthority))) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to remove a(n) " + roleName + " account.");
         }
 
-        return null;
+        if (Objects.isNull(username)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("No username specified.");
+        }
+
+        if ("agent".equals(roleName)) {
+            Agent agent = agentsRepository.findByUsername(username);
+            System.out.println(agent.getUsername());
+            agentsRepository.delete(agent);
+
+        } else if ("broker".equals(roleName)) {
+            Broker broker = brokersRepository.findByUsername(username);
+            brokersRepository.delete(broker);
+
+        } else if ("accountant".equals(roleName)) {
+            Accountant accountant = accountantsRepository.findByUsername(username);
+            accountantsRepository.delete(accountant);
+        }
+
+        return ResponseEntity.ok("Correctly removed a(n) " + roleName + " of the username: " + username);
     }
 }
