@@ -20,7 +20,6 @@ import java.util.List;
         @JsonSubTypes.Type(value = Administrator.class, name = "admin"),
         @JsonSubTypes.Type(value = Broker.class, name = "broker")
 })
-@Inheritance(strategy = InheritanceType.JOINED)
 @Data
 @MappedSuperclass
 public abstract class User {

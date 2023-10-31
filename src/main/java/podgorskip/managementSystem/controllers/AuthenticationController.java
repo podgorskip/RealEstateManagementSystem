@@ -1,6 +1,8 @@
 package podgorskip.managementSystem.controllers;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +32,7 @@ import java.util.Objects;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
+    private final static Logger log = LoggerFactory.getLogger(AuthenticationController.class);
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final DatabaseUserDetailsService databaseUserDetailsService;
@@ -72,6 +75,11 @@ public class AuthenticationController {
         }
 
        return ResponseEntity.status(204).build();
+    }
+
+    @GetMapping("/test")
+    public CustomUserDetails test() {
+        return databaseUserDetailsService.loadUserByUsername("podgorski.p");
     }
 
     @PostMapping("/authenticate")

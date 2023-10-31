@@ -1,6 +1,8 @@
 package podgorskip.managementSystem;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +32,7 @@ import podgorskip.managementSystem.utils.ValidationUtils;
 @EntityScan(basePackages = "podgorskip.managementSystem.jpa")
 @ComponentScan
 public class WebConfiguration {
+    private static final Logger log = LoggerFactory.getLogger(WebConfiguration.class);
     @Autowired
     private DatabaseUserDetailsService databaseUserDetailsService;
 
@@ -53,7 +56,6 @@ public class WebConfiguration {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        System.out.println(databaseUserDetailsService);
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
         daoAuthenticationProvider.setUserDetailsService(databaseUserDetailsService);
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
