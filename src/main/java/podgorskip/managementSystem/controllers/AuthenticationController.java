@@ -1,17 +1,16 @@
 package podgorskip.managementSystem.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import podgorskip.managementSystem.dto.AuthenticationDTO;
 import podgorskip.managementSystem.dto.RequestUserDTO;
 import podgorskip.managementSystem.jpa.entities.Client;
 import podgorskip.managementSystem.jpa.entities.Owner;
@@ -22,17 +21,13 @@ import podgorskip.managementSystem.jpa.repositories.RolesRepository;
 import podgorskip.managementSystem.security.CustomUserDetails;
 import podgorskip.managementSystem.security.JwtUtils;
 import podgorskip.managementSystem.security.DatabaseUserDetailsService;
-
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
-    private final static Logger log = LoggerFactory.getLogger(AuthenticationController.class);
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final DatabaseUserDetailsService databaseUserDetailsService;
@@ -40,10 +35,18 @@ public class AuthenticationController {
     private final ClientsRepository clientsRepository;
     private final OwnersRepository ownersRepository;
     private final RolesRepository rolesRepository;
+    private final static Logger log = LogManager.getLogger(AuthenticationController.class);
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RequestUserDTO user) {
         Role role = rolesRepository.findByName(user.getRole());
+
+        if (!user.validateData()) {
+            String message = "Some of the expected criteria is not met for provided credentials: " + user;
+            log.info(message);
+
+            return ResponseEntity.status(204).contentType(MediaType.APPLICATION_JSON).body(message);
+        }
 
         if (Objects.nonNull(role)) {
 
@@ -57,6 +60,9 @@ public class AuthenticationController {
                 client.setRole(role);
 
                 clientsRepository.save(client);
+                log.info("Correctly created a new client account.");
+                log.info("Clients database updated.");
+
                 return ResponseEntity.ok("Correctly registered as a client.");
             }
 
@@ -70,32 +76,30 @@ public class AuthenticationController {
                 owner.setRole(role);
 
                 ownersRepository.save(owner);
+                log.info("Correctly created a new owner account.");
+                log.info("Owners database updated.");
+
                 return ResponseEntity.ok("Correctly registered as an owner.");
             }
         }
 
-       return ResponseEntity.status(204).build();
-    }
+        String message = "Provided role: " + role + " doesn't match any available options.";
+        log.warn(message);
 
-    @GetMapping("/test")
-    public CustomUserDetails test() {
-        return databaseUserDetailsService.loadUserByUsername("podgorski.p");
+        return ResponseEntity.status(204).body(message);
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<String> authenticate(@RequestBody RequestUserDTO userDTO) {
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userDTO.getUsername(), userDTO.getPassword()));
+    public ResponseEntity<String> authenticate(@RequestBody AuthenticationDTO user) {
+        log.info("Credentials to authenticate: " + user);
 
-            CustomUserDetails customUserDetails = databaseUserDetailsService.loadUserByUsername(userDTO.getUsername());
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
-            if (Objects.nonNull(customUserDetails)) {
-                return ResponseEntity.ok(jwtUtils.generateToken(customUserDetails));
-            }
+        CustomUserDetails customUserDetails = databaseUserDetailsService.loadUserByUsername(user.getUsername());
 
-        } catch (UsernameNotFoundException e) {
-
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found", e);
+        if (Objects.nonNull(customUserDetails)) {
+            log.info("JwtToken generated for user: " + user.getUsername());
+            return ResponseEntity.ok(jwtUtils.generateToken(customUserDetails));
         }
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

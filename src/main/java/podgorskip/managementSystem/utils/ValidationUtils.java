@@ -8,6 +8,7 @@ public class ValidationUtils {
     private static final int FIRSTNAME_LENGTH = 20;
     private static final int LASTNAME_LENGTH = 20;
 
+
     public Boolean isUsernameValid(String username) {
         return Objects.nonNull(username) && username.length() <= USERNAME_LENGTH;
     }
