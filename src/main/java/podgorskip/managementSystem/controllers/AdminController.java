@@ -17,10 +17,9 @@ import podgorskip.managementSystem.jpa.entities.Broker;
 import podgorskip.managementSystem.jpa.entities.User;
 import podgorskip.managementSystem.jpa.repositories.*;
 import podgorskip.managementSystem.security.CustomUserDetails;
-import podgorskip.managementSystem.security.DatabaseUserDetailsService;
 import podgorskip.managementSystem.utils.Privileges;
 import podgorskip.managementSystem.utils.Roles;
-
+import podgorskip.managementSystem.utils.ValidationUtils;
 import java.util.Date;
 import java.util.Objects;
 
@@ -33,7 +32,7 @@ public class AdminController {
     private final AgentsRepository agentsRepository;
     private final BrokersRepository brokersRepository;
     private final AccountantsRepository accountantsRepository;
-    private final DatabaseUserDetailsService databaseUserDetailsService;
+    private final ValidationUtils validationUtils;
     private static final Logger log = LogManager.getLogger(AdminController.class);
 
     @PostMapping("/add-agent")
@@ -129,7 +128,7 @@ public class AdminController {
 
     private ResponseEntity<String> validateCredentials(CustomUserDetails userDetails, RequestUserDTO requestUser, Privileges requiredAuthority, Roles roleName) {
 
-        if (isUserUnauthorized(userDetails, requiredAuthority)) {
+        if (validationUtils.isUserUnauthorized(userDetails, requiredAuthority)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to create a new " + roleName.name().toLowerCase() + " account.");
         }
 
@@ -138,8 +137,7 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("No user details are provided.");
         }
 
-        if (Objects.nonNull(databaseUserDetailsService.loadUserByUsername(requestUser.getUsername()))) {
-            log.warn("Provided username is already taken");
+        if (!validationUtils.isUsernameAvailable(requestUser.getUsername())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("Provided username is already taken");
         }
 
@@ -153,7 +151,7 @@ public class AdminController {
 
     private ResponseEntity<String> removeUser(CustomUserDetails userDetails, UsernameDTO username, Privileges requiredAuthority, Roles roleName) {
 
-        if (isUserUnauthorized(userDetails, requiredAuthority)) {
+        if (validationUtils.isUserUnauthorized(userDetails, requiredAuthority)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to remove a(n) " + roleName.name().toLowerCase() + " account.");
         }
 
@@ -162,32 +160,23 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("No username specified.");
         }
 
+        if (validationUtils.isUsernameAvailable(username.getUsername())) {
+            String message = "No account of the specified username found";
+            log.warn(message);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+        }
+
         switch (roleName) {
             case AGENT -> {
                 Agent agent = agentsRepository.findByUsername(username.getUsername());
-
-                if (Objects.isNull(agent)) {
-                    return accountNotFoundResponseEntity();
-                }
-
                 agentsRepository.delete(agent);
             }
             case BROKER -> {
                 Broker broker = brokersRepository.findByUsername(username.getUsername());
-
-                if (Objects.isNull(broker)) {
-                    return accountNotFoundResponseEntity();
-                }
-
                 brokersRepository.delete(broker);
             }
             case ACCOUNTANT -> {
                 Accountant accountant = accountantsRepository.findByUsername(username.getUsername());
-
-                if (Objects.isNull(accountant)) {
-                    return accountNotFoundResponseEntity();
-                }
-
                 accountantsRepository.delete(accountant);
             }
             default -> {
@@ -201,22 +190,5 @@ public class AdminController {
         log.info("Database updated");
 
         return ResponseEntity.ok(message);
-    }
-
-    private ResponseEntity<String> accountNotFoundResponseEntity() {
-
-        String message = "No account of the specified username found";
-        log.warn(message);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
-    }
-
-    private Boolean isUserUnauthorized(CustomUserDetails userDetails, Privileges requiredAuthority) {
-
-        if (Objects.isNull(userDetails) || userDetails.getAuthorities().stream().noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(requiredAuthority.name()))) {
-            log.warn("Authenticated user lacked privilege {} to perform the request", requiredAuthority);
-            return true;
-        }
-
-        return false;
     }
 }

@@ -3,12 +3,7 @@ package podgorskip.managementSystem.dto;
 import lombok.Data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import podgorskip.managementSystem.security.DatabaseUserDetailsService;
-import podgorskip.managementSystem.utils.ValidationUtils;
-
-import java.util.Objects;
+import podgorskip.managementSystem.utils.AccountCreationValidationUtils;
 
 @Data
 public class RequestUserDTO {
@@ -18,7 +13,7 @@ public class RequestUserDTO {
     private String password;
     private String role;
     private static final Logger log = LogManager.getLogger(RequestUserDTO.class);
-    private static final ValidationUtils validationUtils = new ValidationUtils();
+    private static final AccountCreationValidationUtils validationUtils = new AccountCreationValidationUtils();
 
     public Boolean validateData() {
 
