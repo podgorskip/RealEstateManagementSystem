@@ -31,10 +31,11 @@ public class AdminController {
     private final AccountantsRepository accountantsRepository;
     private static final Logger log = LogManager.getLogger(AdminController.class);
     private enum Roles { ACCOUNTANT, AGENT, BROKER}
+    private enum Privileges { ADD_AGENT, ADD_BROKER, ADD_ACCOUNTANT, REMOVE_AGENT, REMOVE_BROKER, REMOVE_ACCOUNTANT }
 
     @PostMapping("/add-agent")
     public ResponseEntity<String> addAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody RequestUserDTO user) {
-        ResponseEntity<String> response = validateCredentials(userDetails, user, "ADD_AGENT", Roles.AGENT);
+        ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_AGENT, Roles.AGENT);
 
         if (Objects.isNull(response)) {
             agentsRepository.save((Agent) createUser(user, Roles.AGENT));
@@ -50,7 +51,7 @@ public class AdminController {
 
     @PostMapping("/add-broker")
     public ResponseEntity<String> addBroker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody RequestUserDTO user) {
-        ResponseEntity<String> response = validateCredentials(userDetails, user, "ADD_BROKER", Roles.BROKER);
+        ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_BROKER, Roles.BROKER);
 
         if (Objects.isNull(response)) {
             brokersRepository.save((Broker) createUser(user, Roles.BROKER));
@@ -66,7 +67,7 @@ public class AdminController {
 
     @PostMapping("/add-accountant")
     public ResponseEntity<String> addAccountant(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody RequestUserDTO user) {
-        ResponseEntity<String> response = validateCredentials(userDetails, user, "ADD_ACCOUNTANT", Roles.ACCOUNTANT);
+        ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_ACCOUNTANT, Roles.ACCOUNTANT);
 
         if (Objects.isNull(response)) {
             accountantsRepository.save((Accountant) createUser(user, Roles.ACCOUNTANT));
@@ -82,17 +83,17 @@ public class AdminController {
 
     @DeleteMapping("/remove-agent")
     public ResponseEntity<String> removeAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UsernameDTO username) {
-        return removeUser(userDetails, username, "REMOVE_AGENT", Roles.AGENT);
+        return removeUser(userDetails, username, Privileges.REMOVE_AGENT, Roles.AGENT);
     }
 
     @DeleteMapping("/remove-broker")
     public ResponseEntity<String> removeBroker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UsernameDTO username) {
-        return removeUser(userDetails, username, "REMOVE_BROKER", Roles.BROKER);
+        return removeUser(userDetails, username, Privileges.REMOVE_BROKER, Roles.BROKER);
     }
 
     @DeleteMapping("/remove-accountant")
     public ResponseEntity<String> removeAccountant(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UsernameDTO username) {
-        return removeUser(userDetails, username, "REMOVE_ACCOUNTANT", Roles.ACCOUNTANT);
+        return removeUser(userDetails, username, Privileges.REMOVE_ACCOUNTANT, Roles.ACCOUNTANT);
     }
 
     private User createUser(RequestUserDTO requestUser, Roles roleName) {
@@ -119,11 +120,20 @@ public class AdminController {
         return user;
     }
 
-    private ResponseEntity<String> validateCredentials(CustomUserDetails userDetails, RequestUserDTO requestUser, String requiredAuthority, Roles roleName) {
+    private Boolean isUserUnauthorized(CustomUserDetails userDetails, Privileges requiredAuthority) {
 
-        if (Objects.isNull(userDetails) || userDetails.getAuthorities().stream().noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(requiredAuthority))) {
+        if (Objects.isNull(userDetails) || userDetails.getAuthorities().stream().noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(requiredAuthority.name()))) {
             log.warn("Authenticated user lacked privilege {} to perform the request", requiredAuthority);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to create a new " + roleName.name().toLowerCase() + " account.");
+            return true;
+        }
+
+        return false;
+    }
+
+    private ResponseEntity<String> validateCredentials(CustomUserDetails userDetails, RequestUserDTO requestUser, Privileges requiredAuthority, Roles roleName) {
+
+        if (isUserUnauthorized(userDetails, requiredAuthority)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to create a new " + roleName.name().toLowerCase() + " account.");
         }
 
         if (Objects.isNull(requestUser)) {
@@ -139,10 +149,10 @@ public class AdminController {
         return null;
     }
 
-    private ResponseEntity<String> removeUser(CustomUserDetails userDetails, UsernameDTO username, String requiredAuthority, Roles roleName) {
-        if (Objects.isNull(userDetails) || userDetails.getAuthorities().stream().noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(requiredAuthority))) {
-            log.warn("Authenticated user lacked privilege {} to perform the request", requiredAuthority);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to remove a(n) " + roleName.name().toLowerCase() + " account.");
+    private ResponseEntity<String> removeUser(CustomUserDetails userDetails, UsernameDTO username, Privileges requiredAuthority, Roles roleName) {
+
+        if (isUserUnauthorized(userDetails, requiredAuthority)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to remove a(n) " + roleName.name().toLowerCase() + " account.");
         }
 
         if (Objects.isNull(username.getUsername())) {
@@ -184,7 +194,7 @@ public class AdminController {
             }
         }
 
-        String message = "Correctly removed the account of type " + roleName;
+        String message = "Correctly removed the account of type " + roleName.name().toLowerCase();
         log.info(message);
         log.info("Database updated");
 
