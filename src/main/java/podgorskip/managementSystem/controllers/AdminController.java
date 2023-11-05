@@ -17,6 +17,10 @@ import podgorskip.managementSystem.jpa.entities.Broker;
 import podgorskip.managementSystem.jpa.entities.User;
 import podgorskip.managementSystem.jpa.repositories.*;
 import podgorskip.managementSystem.security.CustomUserDetails;
+import podgorskip.managementSystem.security.DatabaseUserDetailsService;
+import podgorskip.managementSystem.utils.Privileges;
+import podgorskip.managementSystem.utils.Roles;
+
 import java.util.Date;
 import java.util.Objects;
 
@@ -29,12 +33,12 @@ public class AdminController {
     private final AgentsRepository agentsRepository;
     private final BrokersRepository brokersRepository;
     private final AccountantsRepository accountantsRepository;
+    private final DatabaseUserDetailsService databaseUserDetailsService;
     private static final Logger log = LogManager.getLogger(AdminController.class);
-    private enum Roles { ACCOUNTANT, AGENT, BROKER}
-    private enum Privileges { ADD_AGENT, ADD_BROKER, ADD_ACCOUNTANT, REMOVE_AGENT, REMOVE_BROKER, REMOVE_ACCOUNTANT }
 
     @PostMapping("/add-agent")
     public ResponseEntity<String> addAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody RequestUserDTO user) {
+
         ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_AGENT, Roles.AGENT);
 
         if (Objects.isNull(response)) {
@@ -51,6 +55,7 @@ public class AdminController {
 
     @PostMapping("/add-broker")
     public ResponseEntity<String> addBroker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody RequestUserDTO user) {
+
         ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_BROKER, Roles.BROKER);
 
         if (Objects.isNull(response)) {
@@ -67,6 +72,7 @@ public class AdminController {
 
     @PostMapping("/add-accountant")
     public ResponseEntity<String> addAccountant(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody RequestUserDTO user) {
+
         ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_ACCOUNTANT, Roles.ACCOUNTANT);
 
         if (Objects.isNull(response)) {
@@ -97,6 +103,7 @@ public class AdminController {
     }
 
     private User createUser(RequestUserDTO requestUser, Roles roleName) {
+
         User user;
 
         switch (roleName) {
@@ -120,16 +127,6 @@ public class AdminController {
         return user;
     }
 
-    private Boolean isUserUnauthorized(CustomUserDetails userDetails, Privileges requiredAuthority) {
-
-        if (Objects.isNull(userDetails) || userDetails.getAuthorities().stream().noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(requiredAuthority.name()))) {
-            log.warn("Authenticated user lacked privilege {} to perform the request", requiredAuthority);
-            return true;
-        }
-
-        return false;
-    }
-
     private ResponseEntity<String> validateCredentials(CustomUserDetails userDetails, RequestUserDTO requestUser, Privileges requiredAuthority, Roles roleName) {
 
         if (isUserUnauthorized(userDetails, requiredAuthority)) {
@@ -139,6 +136,11 @@ public class AdminController {
         if (Objects.isNull(requestUser)) {
             log.warn("No credentials supplied to perform the request");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("No user details are provided.");
+        }
+
+        if (Objects.nonNull(databaseUserDetailsService.loadUserByUsername(requestUser.getUsername()))) {
+            log.warn("Provided username is already taken");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("Provided username is already taken");
         }
 
         if (!requestUser.validateData()) {
@@ -202,8 +204,19 @@ public class AdminController {
     }
 
     private ResponseEntity<String> accountNotFoundResponseEntity() {
+
         String message = "No account of the specified username found";
         log.warn(message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+    }
+
+    private Boolean isUserUnauthorized(CustomUserDetails userDetails, Privileges requiredAuthority) {
+
+        if (Objects.isNull(userDetails) || userDetails.getAuthorities().stream().noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(requiredAuthority.name()))) {
+            log.warn("Authenticated user lacked privilege {} to perform the request", requiredAuthority);
+            return true;
+        }
+
+        return false;
     }
 }

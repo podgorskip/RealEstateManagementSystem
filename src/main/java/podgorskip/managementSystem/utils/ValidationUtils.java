@@ -1,5 +1,7 @@
 package podgorskip.managementSystem.utils;
 
+import podgorskip.managementSystem.security.DatabaseUserDetailsService;
+
 import java.util.Objects;
 
 public class ValidationUtils {
@@ -7,7 +9,6 @@ public class ValidationUtils {
     private static final int PASSWORD_LENGTH = 20;
     private static final int FIRSTNAME_LENGTH = 20;
     private static final int LASTNAME_LENGTH = 20;
-
 
     public Boolean isUsernameValid(String username) {
         return Objects.nonNull(username) && username.length() <= USERNAME_LENGTH;
