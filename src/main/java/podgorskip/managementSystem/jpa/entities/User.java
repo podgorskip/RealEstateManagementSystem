@@ -41,6 +41,12 @@ public abstract class User {
 
     private Date created;
 
+    @Column(unique = true)
+    private String email;
+
+    @Column(name = "phone_number", unique = true)
+    private String phoneNumber;
+
     @OneToOne
     @JoinColumn(name = "role_id")
     private Role role;

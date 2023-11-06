@@ -14,13 +14,14 @@ import podgorskip.managementSystem.dto.AuthenticationDTO;
 import podgorskip.managementSystem.dto.RequestUserDTO;
 import podgorskip.managementSystem.jpa.entities.Client;
 import podgorskip.managementSystem.jpa.entities.Owner;
-import podgorskip.managementSystem.jpa.entities.Role;
+import podgorskip.managementSystem.jpa.entities.User;
 import podgorskip.managementSystem.jpa.repositories.ClientsRepository;
 import podgorskip.managementSystem.jpa.repositories.OwnersRepository;
 import podgorskip.managementSystem.jpa.repositories.RolesRepository;
 import podgorskip.managementSystem.security.CustomUserDetails;
 import podgorskip.managementSystem.security.JwtUtils;
 import podgorskip.managementSystem.security.DatabaseUserDetailsService;
+import podgorskip.managementSystem.utils.Roles;
 import java.util.Date;
 import java.util.Objects;
 
@@ -37,56 +38,40 @@ public class AuthenticationController {
     private final RolesRepository rolesRepository;
     private final static Logger log = LogManager.getLogger(AuthenticationController.class);
 
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RequestUserDTO user) {
-        Role role = rolesRepository.findByName(user.getRole());
+    @PostMapping("/register-client")
+    public ResponseEntity<String> registerClient(@RequestBody RequestUserDTO user) {
 
         if (!user.validateData()) {
-            String message = "Some of the expected criteria is not met for provided credentials: " + user;
+            String message = "Some of the expected criteria were not met for the provided credentials";
             log.info(message);
 
-            return ResponseEntity.status(204).contentType(MediaType.APPLICATION_JSON).body(message);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(message);
         }
 
-        if (Objects.nonNull(role)) {
+        clientsRepository.save((Client) createUser(user, Roles.CLIENT));
 
-            if ("ROLE_CLIENT".equals(user.getRole())) {
-                Client client = new Client();
-                client.setFirstName(user.getFirstName());
-                client.setLastName(user.getLastName());
-                client.setUsername(user.getUsername());
-                client.setPassword(passwordEncoder.encode(user.getPassword()));
-                client.setCreated(new Date());
-                client.setRole(role);
+        log.info("Correctly created a new client account.");
+        log.info("Clients database updated.");
 
-                clientsRepository.save(client);
-                log.info("Correctly created a new client account.");
-                log.info("Clients database updated.");
+        return ResponseEntity.ok("Correctly registered as a client.");
+    }
 
-                return ResponseEntity.ok("Correctly registered as a client.");
-            }
+    @PostMapping("/register-owner")
+    public ResponseEntity<String> registerOwner(@RequestBody RequestUserDTO user) {
 
-            if ("ROLE_OWNER".equals(user.getRole())) {
-                Owner owner = new Owner();
-                owner.setFirstName(user.getFirstName());
-                owner.setLastName(user.getLastName());
-                owner.setUsername(user.getUsername());
-                owner.setPassword(passwordEncoder.encode(user.getPassword()));
-                owner.setCreated(new Date());
-                owner.setRole(role);
+        if (!user.validateData()) {
+            String message = "Some of the expected criteria were not met for the provided credentials";
+            log.info(message);
 
-                ownersRepository.save(owner);
-                log.info("Correctly created a new owner account.");
-                log.info("Owners database updated.");
-
-                return ResponseEntity.ok("Correctly registered as an owner.");
-            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(message);
         }
 
-        String message = "Provided role: " + role + " doesn't match any available options.";
-        log.warn(message);
+        ownersRepository.save((Owner) createUser(user, Roles.OWNER));
 
-        return ResponseEntity.status(204).body(message);
+        log.info("Correctly created a new owner account.");
+        log.info("Owners database updated.");
+
+        return ResponseEntity.ok("Correctly registered as an owner.");
     }
 
     @PostMapping("/authenticate")
@@ -103,5 +88,23 @@ public class AuthenticationController {
         }
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    private User createUser(RequestUserDTO userDTO, Roles role) {
+        User user;
+
+        if (("CLIENT").equals(role.name())) user = new Client();
+        else user = new Owner();
+
+        user.setFirstName(userDTO.getFirstName());
+        user.setLastName(userDTO.getLastName());
+        user.setUsername(userDTO.getUsername());
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        user.setCreated(new Date());
+        user.setRole(rolesRepository.findByName("ROLE_" + role.name()));
+        user.setEmail(userDTO.getEmail());
+        user.setPhoneNumber(userDTO.getPhoneNumber());
+
+        return user;
     }
 }

@@ -122,6 +122,8 @@ public class AdminController {
         user.setPassword(passwordEncoder.encode(requestUser.getUsername()));
         user.setRole(rolesRepository.findByName("ROLE_" + roleName.name()));
         user.setCreated(new Date());
+        user.setEmail(requestUser.getEmail());
+        user.setPhoneNumber(requestUser.getPhoneNumber());
 
         return user;
     }

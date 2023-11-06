@@ -11,7 +11,8 @@ public class RequestUserDTO {
     private String lastName;
     private String username;
     private String password;
-    private String role;
+    private String email;
+    private String phoneNumber;
     private static final Logger log = LogManager.getLogger(RequestUserDTO.class);
     private static final AccountCreationValidationUtils validationUtils = new AccountCreationValidationUtils();
 
@@ -28,12 +29,22 @@ public class RequestUserDTO {
         }
 
         if (!validationUtils.isUsernameValid(username)) {
-            log.warn("Provided username name didn't align with the requirements.");
+            log.warn("Provided username didn't align with the requirements.");
             return false;
         }
 
         if (!validationUtils.isPasswordValid(password)) {
-            log.warn("Provided password name didn't align with the requirements.");
+            log.warn("Provided password didn't align with the requirements.");
+            return false;
+        }
+
+        if (!validationUtils.isPhoneNumberValid(phoneNumber)) {
+            log.warn("Provided phone number didn't align with the requirements.");
+            return false;
+        }
+
+        if (!validationUtils.isEmailValid(email)) {
+            log.warn("Provided email didn't align with the requirements.");
             return false;
         }
 

@@ -3,10 +3,12 @@ package podgorskip.managementSystem.utils;
 import java.util.Objects;
 
 public class AccountCreationValidationUtils {
-    private static final int USERNAME_LENGTH = 20;
+    private static final int USERNAME_LENGTH = 10;
     private static final int PASSWORD_LENGTH = 20;
     private static final int FIRSTNAME_LENGTH = 20;
     private static final int LASTNAME_LENGTH = 20;
+    private static final int PHONE_NUMBER_LENGTH = 15;
+    private static final int EMAIL_LENGTH = 30;
 
     public Boolean isUsernameValid(String username) {
         return Objects.nonNull(username) && username.length() <= USERNAME_LENGTH;
@@ -22,5 +24,13 @@ public class AccountCreationValidationUtils {
 
     public Boolean isLastNameValid(String lastName) {
         return Objects.nonNull(lastName) && lastName.length() <= LASTNAME_LENGTH;
+    }
+
+    public Boolean isPhoneNumberValid(String phoneNumber) {
+        return phoneNumber.length() <= PHONE_NUMBER_LENGTH;
+    }
+
+    public Boolean isEmailValid(String email) {
+        return email.contains("@") && email.length() <= EMAIL_LENGTH;
     }
 }
