@@ -16,7 +16,6 @@ import java.util.Date;
         property = "id"
 )
 public class Estate {
-    @Setter(AccessLevel.NONE)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
