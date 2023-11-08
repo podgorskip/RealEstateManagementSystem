@@ -36,7 +36,6 @@ public class Estate {
     private boolean garage;
     private int storeys;
 
-    @Setter(AccessLevel.NONE)
     private Date published;
 
     private String description;

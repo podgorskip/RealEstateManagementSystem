@@ -76,14 +76,16 @@ public class AuthenticationController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<String> authenticate(@RequestBody AuthenticationDTO user) {
-        log.info("Credentials to authenticate: " + user);
+        log.info("Authentication requested for user: " + user.getUsername());
 
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
         CustomUserDetails customUserDetails = databaseUserDetailsService.loadUserByUsername(user.getUsername());
 
         if (Objects.nonNull(customUserDetails)) {
+            log.info("Authentication completed successfully");
             log.info("JwtToken generated for user: " + user.getUsername());
+
             return ResponseEntity.ok(jwtUtils.generateToken(customUserDetails));
         }
 
@@ -93,7 +95,7 @@ public class AuthenticationController {
     private User createUser(RequestUserDTO userDTO, Roles role) {
         User user;
 
-        if (("CLIENT").equals(role.name())) user = new Client();
+        if (Roles.CLIENT.name().equals(role.name())) user = new Client();
         else user = new Owner();
 
         user.setFirstName(userDTO.getFirstName());
