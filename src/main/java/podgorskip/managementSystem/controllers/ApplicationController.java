@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import podgorskip.managementSystem.dto.AgentDTO;
 import podgorskip.managementSystem.dto.AgentMapper;
 import podgorskip.managementSystem.dto.EstateDTO;
+import podgorskip.managementSystem.dto.EstateMapper;
 import podgorskip.managementSystem.jpa.entities.Agent;
 import podgorskip.managementSystem.jpa.entities.Estate;
 import podgorskip.managementSystem.jpa.repositories.AgentsRepository;
@@ -24,7 +25,6 @@ import podgorskip.managementSystem.security.CustomUserDetails;
 import podgorskip.managementSystem.utils.Privileges;
 import podgorskip.managementSystem.utils.ValidationUtils;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/real-estate-agency")
@@ -67,7 +67,7 @@ public class ApplicationController {
         }
 
         log.info("Available estates mapped and returned");
-        return ResponseEntity.ok(estates.stream().map(EstateDTO::new).toList());
+        return ResponseEntity.ok(estates.stream().map(EstateMapper.INSTANCE::convert).toList());
     }
 
     @GetMapping("/estates-filter")
@@ -98,7 +98,7 @@ public class ApplicationController {
         }
 
         log.info("Available estates mapped and returned");
-        return ResponseEntity.ok(estates.stream().map(EstateDTO::new).toList());
+        return ResponseEntity.ok(estates.stream().map(EstateMapper.INSTANCE::convert).toList());
     }
 
 }
