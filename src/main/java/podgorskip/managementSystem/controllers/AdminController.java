@@ -10,7 +10,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import podgorskip.managementSystem.dto.RequestUserDTO;
-import podgorskip.managementSystem.dto.UsernameDTO;
 import podgorskip.managementSystem.jpa.entities.Accountant;
 import podgorskip.managementSystem.jpa.entities.Agent;
 import podgorskip.managementSystem.jpa.entities.Broker;
@@ -21,6 +20,7 @@ import podgorskip.managementSystem.utils.Privileges;
 import podgorskip.managementSystem.utils.Roles;
 import podgorskip.managementSystem.utils.ValidationUtils;
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -87,18 +87,18 @@ public class AdminController {
     }
 
     @DeleteMapping("/remove-agent")
-    public ResponseEntity<String> removeAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UsernameDTO username) {
-        return removeUser(userDetails, username, Privileges.REMOVE_AGENT, Roles.AGENT);
+    public ResponseEntity<String> removeAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
+        return removeUser(userDetails, username.get("username"), Privileges.REMOVE_AGENT, Roles.AGENT);
     }
 
     @DeleteMapping("/remove-broker")
-    public ResponseEntity<String> removeBroker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UsernameDTO username) {
-        return removeUser(userDetails, username, Privileges.REMOVE_BROKER, Roles.BROKER);
+    public ResponseEntity<String> removeBroker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
+        return removeUser(userDetails, username.get("username"), Privileges.REMOVE_BROKER, Roles.BROKER);
     }
 
     @DeleteMapping("/remove-accountant")
-    public ResponseEntity<String> removeAccountant(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UsernameDTO username) {
-        return removeUser(userDetails, username, Privileges.REMOVE_ACCOUNTANT, Roles.ACCOUNTANT);
+    public ResponseEntity<String> removeAccountant(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
+        return removeUser(userDetails, username.get("username"), Privileges.REMOVE_ACCOUNTANT, Roles.ACCOUNTANT);
     }
 
     private User createUser(RequestUserDTO requestUser, Roles roleName) {
@@ -151,18 +151,18 @@ public class AdminController {
         return null;
     }
 
-    private ResponseEntity<String> removeUser(CustomUserDetails userDetails, UsernameDTO username, Privileges requiredAuthority, Roles roleName) {
+    private ResponseEntity<String> removeUser(CustomUserDetails userDetails, String username, Privileges requiredAuthority, Roles roleName) {
 
         if (validationUtils.isUserUnauthorized(userDetails, requiredAuthority)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to remove a(n) " + roleName.name().toLowerCase() + " account.");
         }
 
-        if (Objects.isNull(username.getUsername())) {
+        if (Objects.isNull(username)) {
             log.warn("No username account specified for deletion");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("No username specified.");
         }
 
-        if (validationUtils.isUsernameAvailable(username.getUsername())) {
+        if (validationUtils.isUsernameAvailable(username)) {
             String message = "No account of the specified username found";
             log.warn(message);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
@@ -170,15 +170,15 @@ public class AdminController {
 
         switch (roleName) {
             case AGENT -> {
-                Agent agent = agentsRepository.findByUsername(username.getUsername());
+                Agent agent = agentsRepository.findByUsername(username);
                 agentsRepository.delete(agent);
             }
             case BROKER -> {
-                Broker broker = brokersRepository.findByUsername(username.getUsername());
+                Broker broker = brokersRepository.findByUsername(username);
                 brokersRepository.delete(broker);
             }
             case ACCOUNTANT -> {
-                Accountant accountant = accountantsRepository.findByUsername(username.getUsername());
+                Accountant accountant = accountantsRepository.findByUsername(username);
                 accountantsRepository.delete(accountant);
             }
             default -> {
