@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import podgorskip.managementSystem.dto.AgentDTO;
+import podgorskip.managementSystem.dto.AgentMapper;
 import podgorskip.managementSystem.dto.EstateDTO;
 import podgorskip.managementSystem.jpa.entities.Agent;
 import podgorskip.managementSystem.jpa.entities.Estate;
@@ -22,6 +24,7 @@ import podgorskip.managementSystem.security.CustomUserDetails;
 import podgorskip.managementSystem.utils.Privileges;
 import podgorskip.managementSystem.utils.ValidationUtils;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/real-estate-agency")
@@ -32,15 +35,21 @@ public class ApplicationController {
     private final ValidationUtils validationUtils;
     private static final Logger log = LogManager.getLogger(ApplicationController.class);
     @GetMapping("/agents")
-    public ResponseEntity<List<Agent>> availableAgents(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<List<AgentDTO>> availableAgents(@AuthenticationPrincipal CustomUserDetails userDetails) {
 
         if (validationUtils.isUserUnauthorized(userDetails, Privileges.CHECK_AGENTS)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).build();
         }
 
-        log.info("Available agents returned");
+        List<Agent> agents = agentsRepository.findAll();
 
-        return ResponseEntity.ok(agentsRepository.findAll());
+        if (agents.isEmpty()) {
+            log.info("No agents found in the database");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+
+        log.info("Available agents returned");
+        return ResponseEntity.ok(agents.stream().map(AgentMapper.INSTANCE::convert).toList());
     }
 
     @GetMapping("/estates")
