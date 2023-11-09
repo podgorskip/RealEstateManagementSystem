@@ -1,7 +1,8 @@
-package podgorskip.managementSystem.dto;
+package podgorskip.managementSystem.dto.mappers;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
+import podgorskip.managementSystem.dto.AgentDTO;
 import podgorskip.managementSystem.jpa.entities.Agent;
 
 @Mapper
