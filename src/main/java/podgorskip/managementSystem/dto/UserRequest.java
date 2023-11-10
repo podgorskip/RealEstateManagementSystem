@@ -6,14 +6,14 @@ import org.apache.logging.log4j.Logger;
 import podgorskip.managementSystem.utils.AccountCreationValidationUtils;
 
 @Data
-public class RequestUserDTO {
+public class UserRequest {
     private String firstName;
     private String lastName;
     private String username;
     private String password;
     private String email;
     private String phoneNumber;
-    private static final Logger log = LogManager.getLogger(RequestUserDTO.class);
+    private static final Logger log = LogManager.getLogger(UserRequest.class);
     private static final AccountCreationValidationUtils validationUtils = new AccountCreationValidationUtils();
 
     public Boolean validateData() {
