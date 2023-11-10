@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import podgorskip.managementSystem.dto.RequestUserDTO;
+import podgorskip.managementSystem.dto.UserRequest;
 import podgorskip.managementSystem.jpa.entities.Accountant;
 import podgorskip.managementSystem.jpa.entities.Agent;
 import podgorskip.managementSystem.jpa.entities.Broker;
@@ -36,7 +36,7 @@ public class AdminController {
     private static final Logger log = LogManager.getLogger(AdminController.class);
 
     @PostMapping("/add-agent")
-    public ResponseEntity<String> addAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody RequestUserDTO user) {
+    public ResponseEntity<String> addAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UserRequest user) {
 
         ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_AGENT, Roles.AGENT);
 
@@ -53,7 +53,7 @@ public class AdminController {
     }
 
     @PostMapping("/add-broker")
-    public ResponseEntity<String> addBroker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody RequestUserDTO user) {
+    public ResponseEntity<String> addBroker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UserRequest user) {
 
         ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_BROKER, Roles.BROKER);
 
@@ -70,7 +70,7 @@ public class AdminController {
     }
 
     @PostMapping("/add-accountant")
-    public ResponseEntity<String> addAccountant(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody RequestUserDTO user) {
+    public ResponseEntity<String> addAccountant(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UserRequest user) {
 
         ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_ACCOUNTANT, Roles.ACCOUNTANT);
 
@@ -101,7 +101,7 @@ public class AdminController {
         return removeUser(userDetails, username.get("username"), Privileges.REMOVE_ACCOUNTANT, Roles.ACCOUNTANT);
     }
 
-    private User createUser(RequestUserDTO requestUser, Roles roleName) {
+    private User createUser(UserRequest requestUser, Roles roleName) {
 
         User user;
 
@@ -128,7 +128,7 @@ public class AdminController {
         return user;
     }
 
-    private ResponseEntity<String> validateCredentials(CustomUserDetails userDetails, RequestUserDTO requestUser, Privileges requiredAuthority, Roles roleName) {
+    private ResponseEntity<String> validateCredentials(CustomUserDetails userDetails, UserRequest requestUser, Privileges requiredAuthority, Roles roleName) {
 
         if (validationUtils.isUserUnauthorized(userDetails, requiredAuthority)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to create a new " + roleName.name().toLowerCase() + " account.");

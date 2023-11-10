@@ -11,7 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import podgorskip.managementSystem.dto.AuthenticationDTO;
-import podgorskip.managementSystem.dto.RequestUserDTO;
+import podgorskip.managementSystem.dto.UserRequest;
 import podgorskip.managementSystem.jpa.entities.Client;
 import podgorskip.managementSystem.jpa.entities.Owner;
 import podgorskip.managementSystem.jpa.entities.User;
@@ -39,7 +39,7 @@ public class AuthenticationController {
     private final static Logger log = LogManager.getLogger(AuthenticationController.class);
 
     @PostMapping("/register-client")
-    public ResponseEntity<String> registerClient(@RequestBody RequestUserDTO user) {
+    public ResponseEntity<String> registerClient(@RequestBody UserRequest user) {
 
         if (!user.validateData()) {
             String message = "Some of the expected criteria were not met for the provided credentials";
@@ -57,7 +57,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register-owner")
-    public ResponseEntity<String> registerOwner(@RequestBody RequestUserDTO user) {
+    public ResponseEntity<String> registerOwner(@RequestBody UserRequest user) {
 
         if (!user.validateData()) {
             String message = "Some of the expected criteria were not met for the provided credentials";
@@ -92,7 +92,7 @@ public class AuthenticationController {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
-    private User createUser(RequestUserDTO userDTO, Roles role) {
+    private User createUser(UserRequest userDTO, Roles role) {
         User user;
 
         if (Roles.CLIENT.name().equals(role.name())) user = new Client();
