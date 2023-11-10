@@ -22,6 +22,8 @@ import podgorskip.managementSystem.security.CustomUserDetails;
 import podgorskip.managementSystem.security.JwtUtils;
 import podgorskip.managementSystem.security.DatabaseUserDetailsService;
 import podgorskip.managementSystem.utils.Roles;
+import podgorskip.managementSystem.utils.ValidationUtils;
+
 import java.util.Date;
 import java.util.Objects;
 
@@ -33,6 +35,7 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final DatabaseUserDetailsService databaseUserDetailsService;
     private final JwtUtils jwtUtils;
+    private final ValidationUtils validationUtils;
     private final ClientsRepository clientsRepository;
     private final OwnersRepository ownersRepository;
     private final RolesRepository rolesRepository;
@@ -42,16 +45,23 @@ public class AuthenticationController {
     public ResponseEntity<String> registerClient(@RequestBody UserRequest user) {
 
         if (!user.validateData()) {
-            String message = "Some of the expected criteria were not met for the provided credentials";
-            log.info(message);
+            log.info("Registry rejected. Some of the expected criteria were not met for the provided credentials");
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(message);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON)
+                    .body("Some of the expected criteria were not met for the provided credentials");
+        }
+
+        if (!validationUtils.isUsernameAvailable(user.getUsername())) {
+            log.warn("Registry rejected. Provided username is unavailable.");
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON)
+                    .body("Provided username is already taken");
         }
 
         clientsRepository.save((Client) createUser(user, Roles.CLIENT));
 
-        log.info("Correctly created a new client account.");
-        log.info("Clients database updated.");
+        log.info("Correctly created a new client account");
+        log.info("Clients database updated");
 
         return ResponseEntity.ok("Correctly registered as a client.");
     }
@@ -60,18 +70,25 @@ public class AuthenticationController {
     public ResponseEntity<String> registerOwner(@RequestBody UserRequest user) {
 
         if (!user.validateData()) {
-            String message = "Some of the expected criteria were not met for the provided credentials";
-            log.info(message);
+            log.info("Registry rejected. Some of the expected criteria were not met for the provided credentials");
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(message);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON)
+                    .body("Some of the expected criteria were not met for the provided credentials");
+        }
+
+        if (!validationUtils.isUsernameAvailable(user.getUsername())) {
+            log.warn("Registry rejected. Provided username is unavailable");
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON)
+                    .body("Provided username is already taken");
         }
 
         ownersRepository.save((Owner) createUser(user, Roles.OWNER));
 
-        log.info("Correctly created a new owner account.");
-        log.info("Owners database updated.");
+        log.info("Correctly created a new owner account");
+        log.info("Owners database updated");
 
-        return ResponseEntity.ok("Correctly registered as an owner.");
+        return ResponseEntity.ok("Correctly registered as an owner");
     }
 
     @PostMapping("/authenticate")
