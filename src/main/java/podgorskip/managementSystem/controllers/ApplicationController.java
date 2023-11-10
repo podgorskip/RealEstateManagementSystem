@@ -112,6 +112,11 @@ public class ApplicationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Provided password didn't match the current one");
         }
 
+        if (passwordEncoder.matches(passwords.getNewPassword(), userDetails.getPassword())) {
+            log.warn("Update rejected. Password was the same as the current one");
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("New password cannot be the same as the current one");
+        }
+
         switch (userDetails.getRole()) {
             case AGENT -> {
                 Agent agent = agentsRepository.findByUsername(userDetails.getUsername());
