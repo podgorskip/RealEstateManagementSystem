@@ -6,4 +6,5 @@ import podgorskip.managementSystem.jpa.entities.Administrator;
 
 @Repository
 public interface AdministratorsRepository extends JpaRepository<Administrator, Integer> {
+    Administrator findByUsername(String username);
 }
