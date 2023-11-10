@@ -8,18 +8,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 import podgorskip.managementSystem.dto.AgentDTO;
+import podgorskip.managementSystem.dto.PasswordChangeRequest;
 import podgorskip.managementSystem.dto.mappers.AgentMapper;
 import podgorskip.managementSystem.dto.EstateDTO;
 import podgorskip.managementSystem.dto.mappers.EstateMapper;
-import podgorskip.managementSystem.jpa.entities.Agent;
-import podgorskip.managementSystem.jpa.entities.Estate;
-import podgorskip.managementSystem.jpa.repositories.AgentsRepository;
-import podgorskip.managementSystem.jpa.repositories.EstatesRepository;
+import podgorskip.managementSystem.jpa.entities.*;
+import podgorskip.managementSystem.jpa.repositories.*;
 import podgorskip.managementSystem.jpa.repositories.specification.EstatesSpecification;
 import podgorskip.managementSystem.security.CustomUserDetails;
 import podgorskip.managementSystem.utils.Privileges;
@@ -31,8 +28,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ApplicationController {
     private final AgentsRepository agentsRepository;
+    private final AccountantsRepository accountantsRepository;
+    private final AdministratorsRepository administratorsRepository;
+    private final BrokersRepository brokersRepository;
+    private final ClientsRepository clientsRepository;
+    private final OwnersRepository ownersRepository;
     private final EstatesRepository estatesRepository;
     private final ValidationUtils validationUtils;
+    private final PasswordEncoder passwordEncoder;
     private static final Logger log = LogManager.getLogger(ApplicationController.class);
     @GetMapping("/agents")
     public ResponseEntity<List<AgentDTO>> availableAgents(@AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -101,4 +104,49 @@ public class ApplicationController {
         return ResponseEntity.ok(estates.stream().map(EstateMapper.INSTANCE::convert).toList());
     }
 
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody PasswordChangeRequest passwords) {
+
+        if (!passwordEncoder.matches(passwords.getOldPassword(), userDetails.getPassword())) {
+            log.warn("Provided password didn't match the current one");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Provided password didn't match the current one");
+        }
+
+        switch (userDetails.getRole()) {
+            case AGENT -> {
+                Agent agent = agentsRepository.findByUsername(userDetails.getUsername());
+                agent.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
+                agentsRepository.save(agent);
+            }
+            case ACCOUNTANT -> {
+                Accountant accountant = accountantsRepository.findByUsername(userDetails.getUsername());
+                accountant.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
+                accountantsRepository.save(accountant);
+            }
+            case ADMIN -> {
+                Administrator administrator = administratorsRepository.findByUsername(userDetails.getUsername());
+                administrator.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
+                administratorsRepository.save(administrator);
+            }
+            case BROKER -> {
+                Broker broker = brokersRepository.findByUsername(userDetails.getUsername());
+                broker.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
+                brokersRepository.save(broker);
+            }
+            case CLIENT -> {
+                Client client = clientsRepository.findByUsername(userDetails.getUsername());
+                client.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
+                clientsRepository.save(client);
+            }
+            case OWNER -> {
+                Owner owner = ownersRepository.findByUsername(userDetails.getUsername());
+                owner.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
+                ownersRepository.save(owner);
+            }
+        }
+
+        log.info("Password updated correctly");
+
+        return ResponseEntity.ok("Password updated correctly");
+    }
 }
