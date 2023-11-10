@@ -47,7 +47,7 @@ public class ApplicationController {
         List<Agent> agents = agentsRepository.findAll();
 
         if (agents.isEmpty()) {
-            log.info("No agents found in the database");
+            log.info("No records returned. No available agents were found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
 
@@ -65,7 +65,7 @@ public class ApplicationController {
         List<Estate> estates = estatesRepository.findAll();
 
         if (estates.isEmpty()) {
-            log.info("No available estates records found.");
+            log.info("No records returned. No available estates were found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).contentType(MediaType.APPLICATION_JSON).build();
         }
 
@@ -96,7 +96,7 @@ public class ApplicationController {
         log.info("Filters applied");
 
         if (estates.isEmpty()) {
-            log.info("No available estates records found.");
+            log.info("No records returned. No available estates were found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).contentType(MediaType.APPLICATION_JSON).build();
         }
 
@@ -108,18 +108,18 @@ public class ApplicationController {
     public ResponseEntity<String> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody PasswordChangeRequest passwords) {
 
         if (passwords.getNewPassword().isEmpty() || passwords.getOldPassword().isEmpty()) {
-            log.warn("Required passwords weren't provided correctly");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Neither old password nor new password cannot be empty");
+            log.warn("Update rejected. Required passwords weren't provided correctly");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("Neither old password nor new password cannot be empty");
         }
 
         if (!passwordEncoder.matches(passwords.getOldPassword(), userDetails.getPassword())) {
-            log.warn("Provided password didn't match the current one");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Provided password didn't match the current one");
+            log.warn("Update rejected. Provided password didn't match the current one");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("Provided password didn't match the current one");
         }
 
         if (passwordEncoder.matches(passwords.getNewPassword(), userDetails.getPassword())) {
             log.warn("Update rejected. Password was the same as the current one");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("New password cannot be the same as the current one");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body("New password cannot be the same as the current one");
         }
 
         switch (userDetails.getRole()) {
@@ -155,8 +155,8 @@ public class ApplicationController {
             }
         }
 
-        log.info("Password updated correctly");
+        log.info("Password changed correctly");
 
-        return ResponseEntity.ok("Password updated correctly");
+        return ResponseEntity.status(HttpStatus.OK).body("Password changed successfully");
     }
 }
