@@ -27,10 +27,10 @@ public class AccountCreationValidationUtils {
     }
 
     public Boolean isPhoneNumberValid(String phoneNumber) {
-        return phoneNumber.length() <= PHONE_NUMBER_LENGTH;
+        return Objects.nonNull(phoneNumber) && phoneNumber.length() <= PHONE_NUMBER_LENGTH;
     }
 
     public Boolean isEmailValid(String email) {
-        return email.contains("@") && email.length() <= EMAIL_LENGTH;
+        return Objects.nonNull(email) && email.contains("@") && email.length() <= EMAIL_LENGTH;
     }
 }
