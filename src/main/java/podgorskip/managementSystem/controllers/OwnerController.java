@@ -32,21 +32,26 @@ public class OwnerController {
 
     @PostMapping("/report-offer")
     public ResponseEntity<String> reportOffer(
-            @RequestParam("agentID") Integer agentID,
+            @RequestParam("id") Integer agentID,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody EstateDTO requestEstate
     ) {
 
         if (validationUtils.isUserUnauthorized(userDetails, Privileges.REPORT_OFFER)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to report an offer");
+        }
+
+        if (!requestEstate.validateData()) {
+            log.warn("Offer not reported. Provided data didn't include all the required attributes");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Provided data didn't include all the required attributes");
         }
 
         Optional<Agent> agent = agentsRepository.findById(agentID);
         Owner owner = ownersRepository.findByUsername(userDetails.getUsername());
 
         if (agent.isEmpty()) {
-            log.warn("No agent of the provided id {} found", agentID);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            log.warn("Offer not reported. No agent of the provided id {} found", agentID);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No agent of the provided id found");
         }
 
         EstateOffer estateOffer = new EstateOffer();
@@ -58,13 +63,13 @@ public class OwnerController {
         estateOffer.setRooms(requestEstate.getRooms());
         estateOffer.setBathrooms(requestEstate.getBathrooms());
         estateOffer.setLocalization(requestEstate.getLocalization());
-        estateOffer.setGarage(requestEstate.isGarage());
+        estateOffer.setGarage(requestEstate.getGarage());
         estateOffer.setStoreys(requestEstate.getStoreys());
         estateOffer.setDescription(requestEstate.getDescription());
 
         estateOfferRepository.save(estateOffer);
 
-        log.info("Offer request saved to the temporary database");
+        log.info("Offer reported and saved to the temporary database");
 
         return ResponseEntity.ok("Successfully sent the offer");
     }
