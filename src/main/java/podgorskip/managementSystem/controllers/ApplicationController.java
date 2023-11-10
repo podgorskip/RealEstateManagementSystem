@@ -107,6 +107,11 @@ public class ApplicationController {
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody PasswordChangeRequest passwords) {
 
+        if (passwords.getNewPassword().isEmpty() || passwords.getOldPassword().isEmpty()) {
+            log.warn("Required passwords weren't provided correctly");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Neither old password nor new password cannot be empty");
+        }
+
         if (!passwordEncoder.matches(passwords.getOldPassword(), userDetails.getPassword())) {
             log.warn("Provided password didn't match the current one");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Provided password didn't match the current one");
@@ -114,7 +119,7 @@ public class ApplicationController {
 
         if (passwordEncoder.matches(passwords.getNewPassword(), userDetails.getPassword())) {
             log.warn("Update rejected. Password was the same as the current one");
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("New password cannot be the same as the current one");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("New password cannot be the same as the current one");
         }
 
         switch (userDetails.getRole()) {
