@@ -38,12 +38,16 @@ public class AgentController {
 
         List<EstateOffer> estateOffers = estateOfferRepository.findAll();
 
-        if (estateOffers.isEmpty()) {
-            log.info("No offers to be posted found.");
+        List<EstateOffer> agentsOffers = estateOffers.stream()
+                .filter(estateOffer -> estateOffer.getAgent().equals(agentsRepository.findByUsername(userDetails.getUsername())))
+                .toList();
+
+        if (agentsOffers.isEmpty()) {
+            log.info("No offers to be posted by found");
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
 
-        return ResponseEntity.ok(estateOffers);
+        return ResponseEntity.ok(agentsOffers);
     }
 
     @PostMapping("/post-offer")
