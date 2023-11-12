@@ -23,7 +23,7 @@ public class EstateDTO {
     private String agentPhoneNumber;
 
     public boolean validateData() {
-        return Objects.nonNull(id) && Objects.nonNull(description) && Objects.nonNull(type) &&
+        return Objects.nonNull(description) && Objects.nonNull(type) &&
                 Objects.nonNull(price) && Objects.nonNull(rooms) && Objects.nonNull(bathrooms) &&
                 Objects.nonNull(localization) && Objects.nonNull(garage) && Objects.nonNull(storeys);
     }
