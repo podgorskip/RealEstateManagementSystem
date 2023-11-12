@@ -7,8 +7,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import podgorskip.managementSystem.jpa.entities.Agent;
 import podgorskip.managementSystem.jpa.entities.Estate;
 import podgorskip.managementSystem.jpa.entities.EstateOffer;
+import podgorskip.managementSystem.jpa.entities.Role;
+import podgorskip.managementSystem.jpa.repositories.AgentsRepository;
 import podgorskip.managementSystem.jpa.repositories.EstateOfferRepository;
 import podgorskip.managementSystem.jpa.repositories.EstatesRepository;
 import podgorskip.managementSystem.security.CustomUserDetails;
@@ -22,6 +25,7 @@ import java.util.*;
 public class AgentController {
     private final EstateOfferRepository estateOfferRepository;
     private final EstatesRepository estatesRepository;
+    private final AgentsRepository agentsRepository;
     private final ValidationUtils validationUtils;
     private static final Logger log = LogManager.getLogger(AgentController.class);
 
@@ -88,5 +92,34 @@ public class AgentController {
         log.info("Offer removed from the temporary database");
 
         return ResponseEntity.ok("Correctly posted the offer");
+    }
+
+    @DeleteMapping("/delete-offer")
+    public ResponseEntity<String> deleteOffer(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("id") Integer estateID) {
+
+        if (validationUtils.isUserUnauthorized(userDetails, Privileges.DELETE_OFFER)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to delete offers");
+        }
+
+        Optional<Estate> estateOptional = estatesRepository.findById(estateID);
+
+        if (estateOptional.isEmpty()) {
+            log.warn("Deletion rejected. No estate of the provided id was found");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Estate of the provided id doesn't exist");
+        }
+
+        Estate estate = estateOptional.get();
+        Agent agent = agentsRepository.findByUsername(userDetails.getUsername());
+
+        if (!estate.getAgent().equals(agent)) {
+            log.warn("Deletion rejected. Authenticated agent is not assigned to the specified estate");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Deletion rejected. Requested estate is not managed by you");
+        }
+
+        estatesRepository.delete(estate);
+
+        log.info("Deletion successful. Database updated");
+
+        return ResponseEntity.ok("Successfully deleted the offer");
     }
 }
