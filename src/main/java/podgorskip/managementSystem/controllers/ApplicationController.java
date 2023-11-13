@@ -22,6 +22,7 @@ import podgorskip.managementSystem.security.CustomUserDetails;
 import podgorskip.managementSystem.utils.Privileges;
 import podgorskip.managementSystem.utils.ValidationUtils;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/real-estate-agency")
@@ -158,5 +159,58 @@ public class ApplicationController {
         log.info("Password updated correctly");
 
         return ResponseEntity.ok("Password updated correctly");
+    }
+
+    @PatchMapping("/change-username")
+    public ResponseEntity<String> changeUsername(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> newUsername) {
+
+        String username = newUsername.get("username");
+
+        if (username.isEmpty()) {
+            log.warn("Update rejected. New username cannot be empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("New password cannot be empty");
+        }
+
+        if (!validationUtils.isUsernameAvailable(username)) {
+            log.warn("Update rejected. Provided username is already taken");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username unavailable");
+        }
+
+        switch (userDetails.getRole()) {
+            case AGENT -> {
+                Agent agent = agentsRepository.findByUsername(userDetails.getUsername());
+                agent.setUsername(username);
+                agentsRepository.save(agent);
+            }
+            case ACCOUNTANT -> {
+                Accountant accountant = accountantsRepository.findByUsername(userDetails.getUsername());
+                accountant.setUsername(username);
+                accountantsRepository.save(accountant);
+            }
+            case ADMIN -> {
+                Administrator administrator = administratorsRepository.findByUsername(userDetails.getUsername());
+                administrator.setUsername(username);
+                administratorsRepository.save(administrator);
+            }
+            case BROKER -> {
+                Broker broker = brokersRepository.findByUsername(userDetails.getUsername());
+                broker.setUsername(username);
+                brokersRepository.save(broker);
+            }
+            case CLIENT -> {
+                Client client = clientsRepository.findByUsername(userDetails.getUsername());
+                client.setUsername(username);
+                clientsRepository.save(client);
+            }
+            case OWNER -> {
+                Owner owner = ownersRepository.findByUsername(userDetails.getUsername());
+                owner.setUsername(username);
+                ownersRepository.save(owner);
+            }
+        }
+
+        log.info("Username updated correctly");
+
+        return ResponseEntity.ok("Username updated correctly");
     }
 }
