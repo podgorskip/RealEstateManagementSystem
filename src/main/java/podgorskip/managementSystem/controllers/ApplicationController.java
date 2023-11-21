@@ -31,7 +31,6 @@ public class ApplicationController {
     private final AgentsRepository agentsRepository;
     private final AccountantsRepository accountantsRepository;
     private final AdministratorsRepository administratorsRepository;
-    private final BrokersRepository brokersRepository;
     private final ClientsRepository clientsRepository;
     private final OwnersRepository ownersRepository;
     private final EstatesRepository estatesRepository;
@@ -139,11 +138,6 @@ public class ApplicationController {
                 administrator.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
                 administratorsRepository.save(administrator);
             }
-            case BROKER -> {
-                Broker broker = brokersRepository.findByUsername(userDetails.getUsername());
-                broker.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
-                brokersRepository.save(broker);
-            }
             case CLIENT -> {
                 Client client = clientsRepository.findByUsername(userDetails.getUsername());
                 client.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
@@ -191,11 +185,6 @@ public class ApplicationController {
                 Administrator administrator = administratorsRepository.findByUsername(userDetails.getUsername());
                 administrator.setUsername(username);
                 administratorsRepository.save(administrator);
-            }
-            case BROKER -> {
-                Broker broker = brokersRepository.findByUsername(userDetails.getUsername());
-                broker.setUsername(username);
-                brokersRepository.save(broker);
             }
             case CLIENT -> {
                 Client client = clientsRepository.findByUsername(userDetails.getUsername());

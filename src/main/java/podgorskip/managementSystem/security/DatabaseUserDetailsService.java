@@ -20,8 +20,6 @@ public class DatabaseUserDetailsService implements UserDetailsService {
     @Autowired
     private AgentsRepository agentsRepository;
     @Autowired
-    private BrokersRepository brokersRepository;
-    @Autowired
     private OwnersRepository ownersRepository;
     @Autowired
     private ClientsRepository clientsRepository;

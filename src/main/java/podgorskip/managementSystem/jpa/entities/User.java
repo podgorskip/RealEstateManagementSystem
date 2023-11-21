@@ -18,7 +18,6 @@ import java.util.List;
         @JsonSubTypes.Type(value = Owner.class, name = "owner"),
         @JsonSubTypes.Type(value = Accountant.class, name = "accountant"),
         @JsonSubTypes.Type(value = Administrator.class, name = "admin"),
-        @JsonSubTypes.Type(value = Broker.class, name = "broker")
 })
 @Data
 @MappedSuperclass

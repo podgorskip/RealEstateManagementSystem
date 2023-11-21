@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import podgorskip.managementSystem.dto.UserRequest;
 import podgorskip.managementSystem.jpa.entities.Accountant;
 import podgorskip.managementSystem.jpa.entities.Agent;
-import podgorskip.managementSystem.jpa.entities.Broker;
 import podgorskip.managementSystem.jpa.entities.User;
 import podgorskip.managementSystem.jpa.repositories.*;
 import podgorskip.managementSystem.security.CustomUserDetails;
@@ -30,7 +29,6 @@ public class AdminController {
     private final PasswordEncoder passwordEncoder;
     private final RolesRepository rolesRepository;
     private final AgentsRepository agentsRepository;
-    private final BrokersRepository brokersRepository;
     private final AccountantsRepository accountantsRepository;
     private final ValidationUtils validationUtils;
     private static final Logger log = LogManager.getLogger(AdminController.class);
@@ -47,23 +45,6 @@ public class AdminController {
             log.info("Agents database updated");
 
             return ResponseEntity.ok("Correctly created a new agent account");
-        }
-
-        return response;
-    }
-
-    @PostMapping("/add-broker")
-    public ResponseEntity<String> addBroker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UserRequest user) {
-
-        ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_BROKER, Roles.BROKER);
-
-        if (Objects.isNull(response)) {
-            brokersRepository.save((Broker) createUser(user, Roles.BROKER));
-
-            log.info("Correctly created a new broker account");
-            log.info("Brokers database updated");
-
-            return ResponseEntity.ok("Correctly created a new broker account");
         }
 
         return response;
@@ -91,11 +72,6 @@ public class AdminController {
         return removeUser(userDetails, username.get("username"), Privileges.REMOVE_AGENT, Roles.AGENT);
     }
 
-    @DeleteMapping("/remove-broker")
-    public ResponseEntity<String> removeBroker(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
-        return removeUser(userDetails, username.get("username"), Privileges.REMOVE_BROKER, Roles.BROKER);
-    }
-
     @DeleteMapping("/remove-accountant")
     public ResponseEntity<String> removeAccountant(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
         return removeUser(userDetails, username.get("username"), Privileges.REMOVE_ACCOUNTANT, Roles.ACCOUNTANT);
@@ -107,7 +83,6 @@ public class AdminController {
 
         switch (roleName) {
             case AGENT -> user = new Agent();
-            case BROKER -> user = new Broker();
             case ACCOUNTANT -> user = new Accountant();
             default -> {
                 String message = "Specified role didn't match any available roles";
@@ -172,10 +147,6 @@ public class AdminController {
             case AGENT -> {
                 Agent agent = agentsRepository.findByUsername(username);
                 agentsRepository.delete(agent);
-            }
-            case BROKER -> {
-                Broker broker = brokersRepository.findByUsername(username);
-                brokersRepository.delete(broker);
             }
             case ACCOUNTANT -> {
                 Accountant accountant = accountantsRepository.findByUsername(username);
