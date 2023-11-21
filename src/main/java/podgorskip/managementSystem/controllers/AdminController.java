@@ -10,7 +10,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import podgorskip.managementSystem.dto.UserRequest;
-import podgorskip.managementSystem.jpa.entities.Accountant;
 import podgorskip.managementSystem.jpa.entities.Agent;
 import podgorskip.managementSystem.jpa.entities.User;
 import podgorskip.managementSystem.jpa.repositories.*;
@@ -29,7 +28,6 @@ public class AdminController {
     private final PasswordEncoder passwordEncoder;
     private final RolesRepository rolesRepository;
     private final AgentsRepository agentsRepository;
-    private final AccountantsRepository accountantsRepository;
     private final ValidationUtils validationUtils;
     private static final Logger log = LogManager.getLogger(AdminController.class);
 
@@ -50,31 +48,9 @@ public class AdminController {
         return response;
     }
 
-    @PostMapping("/add-accountant")
-    public ResponseEntity<String> addAccountant(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UserRequest user) {
-
-        ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_ACCOUNTANT, Roles.ACCOUNTANT);
-
-        if (Objects.isNull(response)) {
-            accountantsRepository.save((Accountant) createUser(user, Roles.ACCOUNTANT));
-
-            log.info("Correctly created a new accountant account");
-            log.info("Accountants database updated");
-
-            return ResponseEntity.ok("Correctly created a new accountant account");
-        }
-
-        return response;
-    }
-
     @DeleteMapping("/remove-agent")
     public ResponseEntity<String> removeAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
         return removeUser(userDetails, username.get("username"), Privileges.REMOVE_AGENT, Roles.AGENT);
-    }
-
-    @DeleteMapping("/remove-accountant")
-    public ResponseEntity<String> removeAccountant(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
-        return removeUser(userDetails, username.get("username"), Privileges.REMOVE_ACCOUNTANT, Roles.ACCOUNTANT);
     }
 
     private User createUser(UserRequest requestUser, Roles roleName) {
@@ -83,7 +59,6 @@ public class AdminController {
 
         switch (roleName) {
             case AGENT -> user = new Agent();
-            case ACCOUNTANT -> user = new Accountant();
             default -> {
                 String message = "Specified role didn't match any available roles";
                 log.error(message);
@@ -147,10 +122,6 @@ public class AdminController {
             case AGENT -> {
                 Agent agent = agentsRepository.findByUsername(username);
                 agentsRepository.delete(agent);
-            }
-            case ACCOUNTANT -> {
-                Accountant accountant = accountantsRepository.findByUsername(username);
-                accountantsRepository.delete(accountant);
             }
             default -> {
                 log.warn("Specified role didn't suit any allowed for deletion");

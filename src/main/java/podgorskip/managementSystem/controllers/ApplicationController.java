@@ -29,7 +29,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ApplicationController {
     private final AgentsRepository agentsRepository;
-    private final AccountantsRepository accountantsRepository;
     private final AdministratorsRepository administratorsRepository;
     private final ClientsRepository clientsRepository;
     private final OwnersRepository ownersRepository;
@@ -128,11 +127,6 @@ public class ApplicationController {
                 agent.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
                 agentsRepository.save(agent);
             }
-            case ACCOUNTANT -> {
-                Accountant accountant = accountantsRepository.findByUsername(userDetails.getUsername());
-                accountant.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
-                accountantsRepository.save(accountant);
-            }
             case ADMIN -> {
                 Administrator administrator = administratorsRepository.findByUsername(userDetails.getUsername());
                 administrator.setPassword(passwordEncoder.encode(passwords.getNewPassword()));
@@ -175,11 +169,6 @@ public class ApplicationController {
                 Agent agent = agentsRepository.findByUsername(userDetails.getUsername());
                 agent.setUsername(username);
                 agentsRepository.save(agent);
-            }
-            case ACCOUNTANT -> {
-                Accountant accountant = accountantsRepository.findByUsername(userDetails.getUsername());
-                accountant.setUsername(username);
-                accountantsRepository.save(accountant);
             }
             case ADMIN -> {
                 Administrator administrator = administratorsRepository.findByUsername(userDetails.getUsername());
