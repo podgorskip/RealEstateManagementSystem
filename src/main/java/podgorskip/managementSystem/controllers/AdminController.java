@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import podgorskip.managementSystem.dto.UserRequest;
 import podgorskip.managementSystem.jpa.entities.Agent;
+import podgorskip.managementSystem.jpa.entities.Client;
 import podgorskip.managementSystem.jpa.entities.User;
 import podgorskip.managementSystem.jpa.repositories.*;
 import podgorskip.managementSystem.security.CustomUserDetails;
@@ -28,6 +29,8 @@ public class AdminController {
     private final PasswordEncoder passwordEncoder;
     private final RolesRepository rolesRepository;
     private final AgentsRepository agentsRepository;
+    private final ClientsRepository clientsRepository;
+    private final OwnersRepository ownersRepository;
     private final ValidationUtils validationUtils;
     private static final Logger log = LogManager.getLogger(AdminController.class);
 
@@ -53,17 +56,26 @@ public class AdminController {
         return removeUser(userDetails, username.get("username"), Privileges.REMOVE_AGENT, Roles.AGENT);
     }
 
+    @DeleteMapping("/remove-client")
+    public ResponseEntity<String> removeClient(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
+        return removeUser(userDetails, username.get("username"), Privileges.REMOVE_CLIENT, Roles.CLIENT);
+    }
+
+    @DeleteMapping("/remove-owner")
+    public ResponseEntity<String> removeOwner(@AuthenticationPrincipal CustomUserDetails userDetails, Map<String, String> username) {
+        return removeUser(userDetails, username.get("username"), Privileges.REMOVE_OWNER, Roles.OWNER);
+    }
+
     private User createUser(UserRequest requestUser, Roles roleName) {
 
         User user;
 
-        switch (roleName) {
-            case AGENT -> user = new Agent();
-            default -> {
-                String message = "Specified role didn't match any available roles";
-                log.error(message);
-                throw new RuntimeException(message);
-            }
+        if (roleName == Roles.AGENT) {
+            user = new Agent();
+        } else {
+            String message = "Specified role didn't match any available roles";
+            log.error(message);
+            throw new RuntimeException(message);
         }
 
         user.setFirstName(requestUser.getFirstName());
@@ -120,8 +132,13 @@ public class AdminController {
 
         switch (roleName) {
             case AGENT -> {
-                Agent agent = agentsRepository.findByUsername(username);
-                agentsRepository.delete(agent);
+                agentsRepository.delete(agentsRepository.findByUsername(username));
+            }
+            case CLIENT -> {
+                clientsRepository.delete(clientsRepository.findByUsername(username));
+            }
+            case OWNER -> {
+                ownersRepository.delete(ownersRepository.findByUsername(username));
             }
             default -> {
                 log.warn("Specified role didn't suit any allowed for deletion");
