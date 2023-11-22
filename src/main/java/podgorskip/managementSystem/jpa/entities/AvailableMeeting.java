@@ -1,21 +1,19 @@
 package podgorskip.managementSystem.jpa.entities;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.util.Date;
 
 @Entity
-@Table(name = "scheduled_meetings", schema = "real_estate")
-public class ScheduledMeetings {
+@Table(name = "available_meetings", schema = "real_estate")
+@Data
+public class AvailableMeeting {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne
-    @JoinColumn(name = "client_id")
-    private Client client;
-
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "agent_id")
     private Agent agent;
 
