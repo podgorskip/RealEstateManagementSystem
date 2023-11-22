@@ -276,6 +276,4 @@ public class ApplicationController {
         scheduledMeeting.setClient(clientsRepository.findByUsername(userDetails.getUsername()));
         return scheduledMeeting;
     }
-
-
 }
