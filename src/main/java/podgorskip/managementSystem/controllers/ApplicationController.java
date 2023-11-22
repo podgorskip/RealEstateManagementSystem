@@ -21,10 +21,9 @@ import podgorskip.managementSystem.jpa.repositories.specification.EstatesSpecifi
 import podgorskip.managementSystem.security.CustomUserDetails;
 import podgorskip.managementSystem.utils.Privileges;
 import podgorskip.managementSystem.utils.ValidationUtils;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/real-estate-agency")
@@ -196,7 +195,7 @@ public class ApplicationController {
     }
 
     @GetMapping("/agent-calendar")
-    public ResponseEntity<List<AvailableMeetings>> checkAvailableMeetings(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("id") Integer agentID) {
+    public ResponseEntity<List<Map<String, Object>>> checkAvailableMeetings(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("id") Integer agentID) {
 
         if (Objects.isNull(agentID)) {
             log.warn("Null value passed as a parameter");
@@ -221,6 +220,12 @@ public class ApplicationController {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         }
 
-        return ResponseEntity.ok(availableMeetings);
+        List<Map<String, Object>> mappedMeetings = availableMeetings.stream().map(meeting -> {
+            Map<String, Object> date = new HashMap<>();
+            date.put("date", meeting.getDate());
+            return date;
+        }).toList();
+
+        return ResponseEntity.ok(mappedMeetings);
     }
 }
