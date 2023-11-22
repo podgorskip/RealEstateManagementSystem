@@ -1,10 +1,13 @@
 package podgorskip.managementSystem.jpa.entities;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.util.Date;
 
 @Entity
 @Table(name = "available_meetings", schema = "real_estate")
+@Data
 public class AvailableMeetings {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

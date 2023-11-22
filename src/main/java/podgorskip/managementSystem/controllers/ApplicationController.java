@@ -23,6 +23,8 @@ import podgorskip.managementSystem.utils.Privileges;
 import podgorskip.managementSystem.utils.ValidationUtils;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/real-estate-agency")
@@ -33,6 +35,7 @@ public class ApplicationController {
     private final ClientsRepository clientsRepository;
     private final OwnersRepository ownersRepository;
     private final EstatesRepository estatesRepository;
+    private final AvailableMeetingsRepository availableMeetingsRepository;
     private final ValidationUtils validationUtils;
     private final PasswordEncoder passwordEncoder;
     private static final Logger log = LogManager.getLogger(ApplicationController.class);
@@ -190,5 +193,34 @@ public class ApplicationController {
         log.info("Username updated correctly");
 
         return ResponseEntity.ok("Username updated correctly");
+    }
+
+    @GetMapping("/agent-calendar")
+    public ResponseEntity<List<AvailableMeetings>> checkAvailableMeetings(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("id") Integer agentID) {
+
+        if (Objects.isNull(agentID)) {
+            log.warn("Null value passed as a parameter");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        if (validationUtils.isUserUnauthorized(userDetails, Privileges.CHECK_AGENT_CALENDAR)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        Optional<Agent> agent = agentsRepository.findById(agentID);
+
+        if (agent.isEmpty()) {
+            log.warn("No agent of the specified id {} found", agentID);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        List<AvailableMeetings> availableMeetings = availableMeetingsRepository.findByAgent(agent.get());
+
+        if (availableMeetings.isEmpty()) {
+            log.info("No available meetings for the agent of id {}", agentID);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+
+        return ResponseEntity.ok(availableMeetings);
     }
 }
