@@ -263,6 +263,7 @@ public class ApplicationController {
             log.info("Meeting removed from available meetings database");
 
             return ResponseEntity.status(HttpStatus.CREATED).body("Meeting scheduled successfully");
+            
         } catch (Exception e) {
             log.error("Error scheduling meeting", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error scheduling meeting");
