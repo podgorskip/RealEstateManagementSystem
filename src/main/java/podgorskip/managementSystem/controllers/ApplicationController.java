@@ -213,7 +213,7 @@ public class ApplicationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
-        List<AvailableMeetings> availableMeetings = availableMeetingsRepository.findByAgent(agent.get());
+        List<AvailableMeeting> availableMeetings = availableMeetingsRepository.findByAgent(agent.get());
 
         if (availableMeetings.isEmpty()) {
             log.info("No available meetings for the agent of id {}", agentID);
@@ -222,6 +222,7 @@ public class ApplicationController {
 
         List<Map<String, Object>> mappedMeetings = availableMeetings.stream().map(meeting -> {
             Map<String, Object> date = new HashMap<>();
+            date.put("id", meeting.getId());
             date.put("date", meeting.getDate());
             return date;
         }).toList();
