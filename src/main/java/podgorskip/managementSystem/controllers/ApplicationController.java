@@ -35,6 +35,7 @@ public class ApplicationController {
     private final OwnersRepository ownersRepository;
     private final EstatesRepository estatesRepository;
     private final AvailableMeetingsRepository availableMeetingsRepository;
+    private final ScheduledMeetingsRepository scheduledMeetingsRepository;
     private final ValidationUtils validationUtils;
     private final PasswordEncoder passwordEncoder;
     private static final Logger log = LogManager.getLogger(ApplicationController.class);
@@ -229,4 +230,52 @@ public class ApplicationController {
 
         return ResponseEntity.ok(mappedMeetings);
     }
+
+    @PostMapping("/schedule-meeting")
+    public ResponseEntity<String> scheduleMeeting(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam("id") Integer meetingID) {
+
+        if (validationUtils.isUserUnauthorized(userDetails, Privileges.SCHEDULE_MEETING)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User unauthorized to perform the action");
+        }
+
+        if (meetingID <= 0) {
+            log.warn("Invalid meeting ID provided: {}", meetingID);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid meeting ID");
+        }
+
+        Optional<AvailableMeeting> meeting = availableMeetingsRepository.findById(meetingID);
+
+        if (meeting.isEmpty()) {
+            log.warn("No available meeting of id {}", meetingID);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No meeting of the provided id found");
+        }
+
+        try {
+            ScheduledMeeting scheduledMeeting = createScheduledMeeting(userDetails, meeting.get());
+            scheduledMeetingsRepository.save(scheduledMeeting);
+
+            log.info("Meeting scheduled. Database updated");
+
+            availableMeetingsRepository.delete(meeting.get());
+
+            log.info("Meeting removed from available meetings database");
+
+            return ResponseEntity.status(HttpStatus.CREATED).body("Meeting scheduled successfully");
+        } catch (Exception e) {
+            log.error("Error scheduling meeting", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error scheduling meeting");
+        }
+    }
+
+    private ScheduledMeeting createScheduledMeeting(CustomUserDetails userDetails, AvailableMeeting availableMeeting) {
+        ScheduledMeeting scheduledMeeting = new ScheduledMeeting();
+        scheduledMeeting.setAgent(availableMeeting.getAgent());
+        scheduledMeeting.setDate(availableMeeting.getDate());
+        scheduledMeeting.setClient(clientsRepository.findByUsername(userDetails.getUsername()));
+        return scheduledMeeting;
+    }
+
+
 }
