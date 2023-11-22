@@ -103,7 +103,7 @@ public class ApplicationController {
         return ResponseEntity.ok(estates.stream().map(EstateMapper.INSTANCE::convert).toList());
     }
 
-    @PostMapping("/change-password")
+    @PatchMapping("/change-password")
     public ResponseEntity<String> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody PasswordChangeRequest passwords) {
 
         if (passwords.getNewPassword().isEmpty() || passwords.getOldPassword().isEmpty()) {
