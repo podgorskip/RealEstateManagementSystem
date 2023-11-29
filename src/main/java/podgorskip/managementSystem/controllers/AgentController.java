@@ -1,5 +1,6 @@
 package podgorskip.managementSystem.controllers;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -7,10 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import podgorskip.managementSystem.annotations.RequiredPrivilege;
 import podgorskip.managementSystem.jpa.entities.Agent;
 import podgorskip.managementSystem.jpa.entities.Estate;
 import podgorskip.managementSystem.jpa.entities.EstateOffer;
-import podgorskip.managementSystem.jpa.entities.Role;
 import podgorskip.managementSystem.jpa.repositories.AgentsRepository;
 import podgorskip.managementSystem.jpa.repositories.EstateOfferRepository;
 import podgorskip.managementSystem.jpa.repositories.EstatesRepository;
@@ -26,15 +27,11 @@ public class AgentController {
     private final EstateOfferRepository estateOfferRepository;
     private final EstatesRepository estatesRepository;
     private final AgentsRepository agentsRepository;
-    private final ValidationUtils validationUtils;
     private static final Logger log = LogManager.getLogger(AgentController.class);
 
     @GetMapping("/offers-to-be-posted")
+    @RequiredPrivilege(value = Privileges.POST_OFFER)
     public ResponseEntity<List<EstateOffer>> checkOffersToBePosted(@AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        if (validationUtils.isUserUnauthorized(userDetails, Privileges.POST_OFFER)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
 
         List<EstateOffer> estateOffers = estateOfferRepository.findAll();
 
@@ -51,15 +48,13 @@ public class AgentController {
     }
 
     @PostMapping("/post-offer")
+    @Transactional
+    @RequiredPrivilege(value = Privileges.POST_OFFER)
     public ResponseEntity<String> postOffer(
             @RequestParam("offerID") Integer offerID,
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody Map<String, Integer> expirationInterval
     ) {
-
-        if (validationUtils.isUserUnauthorized(userDetails, Privileges.POST_OFFER)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
 
         Optional<EstateOffer> estateOffer = estateOfferRepository.findById(offerID);
 
@@ -99,11 +94,10 @@ public class AgentController {
     }
 
     @DeleteMapping("/delete-offer")
+    @Transactional
+    @RequiredPrivilege(value = Privileges.DELETE_OFFER)
     public ResponseEntity<String> deleteOffer(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("id") Integer estateID) {
 
-        if (validationUtils.isUserUnauthorized(userDetails, Privileges.DELETE_OFFER)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to delete offers");
-        }
 
         Optional<Estate> estateOptional = estatesRepository.findById(estateID);
 

@@ -10,9 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import podgorskip.managementSystem.annotations.RequiredPrivilege;
 import podgorskip.managementSystem.dto.UserRequest;
 import podgorskip.managementSystem.jpa.entities.Agent;
-import podgorskip.managementSystem.jpa.entities.Client;
 import podgorskip.managementSystem.jpa.entities.User;
 import podgorskip.managementSystem.jpa.repositories.*;
 import podgorskip.managementSystem.security.CustomUserDetails;
@@ -37,9 +37,10 @@ public class AdminController {
 
     @PostMapping("/add-agent")
     @Transactional
+    @RequiredPrivilege(value = Privileges.ADD_AGENT)
     public ResponseEntity<String> addAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UserRequest user) {
 
-        ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_AGENT, Roles.AGENT);
+        ResponseEntity<String> response = validateCredentials(user);
 
         if (Objects.isNull(response)) {
             agentsRepository.save((Agent) createUser(user, Roles.AGENT));
@@ -55,20 +56,23 @@ public class AdminController {
 
     @DeleteMapping("/remove-agent")
     @Transactional
+    @RequiredPrivilege(value = Privileges.REMOVE_AGENT)
     public ResponseEntity<String> removeAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
-        return removeUser(userDetails, username.get("username"), Privileges.REMOVE_AGENT, Roles.AGENT);
+        return removeUser(username.get("username"), Roles.AGENT);
     }
 
     @DeleteMapping("/remove-client")
     @Transactional
+    @RequiredPrivilege(value = Privileges.REMOVE_CLIENT)
     public ResponseEntity<String> removeClient(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
-        return removeUser(userDetails, username.get("username"), Privileges.REMOVE_CLIENT, Roles.CLIENT);
+        return removeUser(username.get("username"), Roles.CLIENT);
     }
 
     @DeleteMapping("/remove-owner")
     @Transactional
+    @RequiredPrivilege(value = Privileges.REMOVE_OWNER)
     public ResponseEntity<String> removeOwner(@AuthenticationPrincipal CustomUserDetails userDetails, Map<String, String> username) {
-        return removeUser(userDetails, username.get("username"), Privileges.REMOVE_OWNER, Roles.OWNER);
+        return removeUser(username.get("username"), Roles.OWNER);
     }
 
     private User createUser(UserRequest requestUser, Roles roleName) {
@@ -95,11 +99,8 @@ public class AdminController {
         return user;
     }
 
-    private ResponseEntity<String> validateCredentials(CustomUserDetails userDetails, UserRequest requestUser, Privileges requiredAuthority, Roles roleName) {
+    private ResponseEntity<String> validateCredentials(UserRequest requestUser) {
 
-        if (validationUtils.isUserUnauthorized(userDetails, requiredAuthority)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to create a new " + roleName.name().toLowerCase() + " account.");
-        }
 
         if (Objects.isNull(requestUser)) {
             log.warn("No credentials supplied to perform the request");
@@ -118,11 +119,7 @@ public class AdminController {
         return null;
     }
 
-    private ResponseEntity<String> removeUser(CustomUserDetails userDetails, String username, Privileges requiredAuthority, Roles roleName) {
-
-        if (validationUtils.isUserUnauthorized(userDetails, requiredAuthority)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("You are not authorized to remove a(n) " + roleName.name().toLowerCase() + " account.");
-        }
+    private ResponseEntity<String> removeUser(String username, Roles roleName) {
 
         if (Objects.isNull(username)) {
             log.warn("No username account specified for deletion");

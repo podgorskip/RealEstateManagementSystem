@@ -1,5 +1,6 @@
 package podgorskip.managementSystem.controllers;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import podgorskip.managementSystem.annotations.RequiredPrivilege;
 import podgorskip.managementSystem.dto.AgentDTO;
 import podgorskip.managementSystem.dto.PasswordChangeRequest;
 import podgorskip.managementSystem.dto.mappers.AgentMapper;
@@ -21,9 +23,7 @@ import podgorskip.managementSystem.jpa.repositories.specification.EstatesSpecifi
 import podgorskip.managementSystem.security.CustomUserDetails;
 import podgorskip.managementSystem.utils.Privileges;
 import podgorskip.managementSystem.utils.ValidationUtils;
-
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/real-estate-agency")
@@ -40,11 +40,8 @@ public class ApplicationController {
     private final PasswordEncoder passwordEncoder;
     private static final Logger log = LogManager.getLogger(ApplicationController.class);
     @GetMapping("/agents")
+    @RequiredPrivilege(value = Privileges.CHECK_AGENTS)
     public ResponseEntity<List<AgentDTO>> availableAgents(@AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        if (validationUtils.isUserUnauthorized(userDetails, Privileges.CHECK_AGENTS)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).build();
-        }
 
         List<Agent> agents = agentsRepository.findAll();
 
@@ -58,11 +55,8 @@ public class ApplicationController {
     }
 
     @GetMapping("/estates")
+    @RequiredPrivilege(value = Privileges.CHECK_ESTATES)
     public ResponseEntity<List<EstateDTO>> estates(@AuthenticationPrincipal CustomUserDetails userDetails) {
-
-        if (validationUtils.isUserUnauthorized(userDetails, Privileges.CHECK_ESTATES)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).build();
-        }
 
         List<Estate> estates = estatesRepository.findAll();
 
@@ -76,6 +70,7 @@ public class ApplicationController {
     }
 
     @GetMapping("/estates-filter")
+    @RequiredPrivilege(value = Privileges.CHECK_ESTATES)
     public ResponseEntity<List<EstateDTO>> estatesFiltered(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(name = "type", required = false) String type,
@@ -87,10 +82,6 @@ public class ApplicationController {
             @RequestParam(name = "garage", required = false) Boolean garage,
             @RequestParam(name = "storeys", required = false) Integer storeys
     ) {
-
-        if (validationUtils.isUserUnauthorized(userDetails, Privileges.CHECK_ESTATES)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).build();
-        }
 
         Specification<Estate> spec = EstatesSpecification.filteredEstates(type, priceFrom, priceTo, rooms, bathrooms, localization, garage, storeys);
         List<Estate> estates = estatesRepository.findAll(spec);
@@ -107,6 +98,7 @@ public class ApplicationController {
     }
 
     @PatchMapping("/change-password")
+    @Transactional
     public ResponseEntity<String> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody PasswordChangeRequest passwords) {
 
         if (passwords.getNewPassword().isEmpty() || passwords.getOldPassword().isEmpty()) {
@@ -153,6 +145,7 @@ public class ApplicationController {
     }
 
     @PatchMapping("/change-username")
+    @Transactional
     public ResponseEntity<String> changeUsername(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> newUsername) {
 
         String username = newUsername.get("username");
@@ -196,15 +189,12 @@ public class ApplicationController {
     }
 
     @GetMapping("/agent-calendar")
+    @RequiredPrivilege(value = Privileges.CHECK_AGENT_CALENDAR)
     public ResponseEntity<List<Map<String, Object>>> checkAvailableMeetings(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestParam("id") Integer agentID) {
 
         if (Objects.isNull(agentID)) {
             log.warn("Null value passed as a parameter");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-
-        if (validationUtils.isUserUnauthorized(userDetails, Privileges.CHECK_AGENT_CALENDAR)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         Optional<Agent> agent = agentsRepository.findById(agentID);
@@ -232,13 +222,11 @@ public class ApplicationController {
     }
 
     @PostMapping("/schedule-meeting")
+    @Transactional
+    @RequiredPrivilege(value = Privileges.SCHEDULE_MEETING)
     public ResponseEntity<String> scheduleMeeting(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam("id") Integer meetingID) {
-
-        if (validationUtils.isUserUnauthorized(userDetails, Privileges.SCHEDULE_MEETING)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User unauthorized to perform the action");
-        }
 
         if (meetingID <= 0) {
             log.warn("Invalid meeting ID provided: {}", meetingID);

@@ -23,7 +23,6 @@ import podgorskip.managementSystem.security.JwtUtils;
 import podgorskip.managementSystem.security.DatabaseUserDetailsService;
 import podgorskip.managementSystem.utils.Roles;
 import podgorskip.managementSystem.utils.ValidationUtils;
-
 import java.util.Date;
 import java.util.Objects;
 
