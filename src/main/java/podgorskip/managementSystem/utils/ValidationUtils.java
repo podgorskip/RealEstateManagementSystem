@@ -26,13 +26,4 @@ public class ValidationUtils {
         return false;
     }
 
-    public Boolean isUserUnauthorized(CustomUserDetails userDetails, Privileges requiredAuthority) {
-
-        if (Objects.isNull(userDetails) || userDetails.getAuthorities().stream().noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals(requiredAuthority.name()))) {
-            log.warn("Authenticated user lacked privilege {} to perform the request", requiredAuthority);
-            return true;
-        }
-
-        return false;
-    }
 }
