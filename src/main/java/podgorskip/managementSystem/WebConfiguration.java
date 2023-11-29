@@ -20,6 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import podgorskip.managementSystem.security.JwtFilter;
@@ -29,6 +30,7 @@ import podgorskip.managementSystem.utils.LoggerInterceptor;
 @Configuration
 @EnableWebSecurity
 @EnableJpaRepositories(basePackages = "podgorskip.managementSystem.jpa")
+@EnableTransactionManagement
 @EntityScan(basePackages = "podgorskip.managementSystem.jpa")
 @ComponentScan
 public class WebConfiguration {
