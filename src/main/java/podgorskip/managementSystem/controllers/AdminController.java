@@ -1,5 +1,6 @@
 package podgorskip.managementSystem.controllers;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,6 +36,7 @@ public class AdminController {
     private static final Logger log = LogManager.getLogger(AdminController.class);
 
     @PostMapping("/add-agent")
+    @Transactional
     public ResponseEntity<String> addAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UserRequest user) {
 
         ResponseEntity<String> response = validateCredentials(userDetails, user, Privileges.ADD_AGENT, Roles.AGENT);
@@ -52,16 +54,19 @@ public class AdminController {
     }
 
     @DeleteMapping("/remove-agent")
+    @Transactional
     public ResponseEntity<String> removeAgent(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
         return removeUser(userDetails, username.get("username"), Privileges.REMOVE_AGENT, Roles.AGENT);
     }
 
     @DeleteMapping("/remove-client")
+    @Transactional
     public ResponseEntity<String> removeClient(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody Map<String, String> username) {
         return removeUser(userDetails, username.get("username"), Privileges.REMOVE_CLIENT, Roles.CLIENT);
     }
 
     @DeleteMapping("/remove-owner")
+    @Transactional
     public ResponseEntity<String> removeOwner(@AuthenticationPrincipal CustomUserDetails userDetails, Map<String, String> username) {
         return removeUser(userDetails, username.get("username"), Privileges.REMOVE_OWNER, Roles.OWNER);
     }
